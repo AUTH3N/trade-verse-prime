@@ -1,13 +1,12 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  Bell,
+  CandlestickChart,
   Home,
   ListOrdered,
   MoreHorizontal,
   Search,
   Star,
-  Wallet,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { hasUserPin, verifyUserPin } from "@/lib/pin.functions";
@@ -16,8 +15,8 @@ import { toast } from "sonner";
 const TABS = [
   { to: "/home", label: "Home", icon: Home },
   { to: "/watchlist", label: "Watchlist", icon: Star },
+  { to: "/fno", label: "F&O", icon: CandlestickChart },
   { to: "/orders", label: "Orders", icon: ListOrdered },
-  { to: "/portfolio", label: "Portfolio", icon: Wallet },
   { to: "/more", label: "More", icon: MoreHorizontal },
 ] as const;
 
