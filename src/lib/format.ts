@@ -27,3 +27,19 @@ export function pct(n: number, digits = 2): string {
 export function signed(n: number): string {
   return `${n > 0 ? "+" : ""}${INR.format(n)}`;
 }
+
+export function formatINR(n: number | string): string {
+  return INR.format(typeof n === "string" ? Number(n) : n);
+}
+
+export function formatPct(n: number, digits = 2): string {
+  return pct(n, digits);
+}
+
+export function signedClass(n: number | string): string {
+  const v = typeof n === "string" ? Number(n) : n;
+  if (v > 0) return "text-bull";
+  if (v < 0) return "text-bear";
+  return "text-muted-foreground";
+}
+
