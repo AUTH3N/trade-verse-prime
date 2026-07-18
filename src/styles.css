@@ -63,94 +63,95 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* Vyro dark palette — deep navy surfaces, electric indigo primary,
-   emerald bull / crimson bear tuned for Indian broker aesthetic. */
+/* Vyro palette — TradingView-inspired, Kotak Neo trails.
+   Deep slate #131722 canvas, TV blue #2962ff primary,
+   #26a69a bull / #ef5350 bear. Broker-grade contrast. */
 :root {
   --radius: 0.75rem;
 
-  --background: 224 39% 6%;
-  --foreground: 210 40% 98%;
+  --background: 220 26% 11%;         /* #131722 */
+  --foreground: 220 12% 86%;         /* #d1d4dc */
 
-  --surface-1: 223 32% 9%;
-  --surface-2: 222 28% 13%;
+  --surface-1: 222 18% 15%;          /* #1e222d */
+  --surface-2: 222 14% 20%;          /* #2a2e39 */
 
-  --card: 223 32% 9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 28% 11%;
-  --popover-foreground: 210 40% 98%;
+  --card: 222 18% 15%;
+  --card-foreground: 220 12% 86%;
+  --popover: 222 18% 15%;
+  --popover-foreground: 220 12% 86%;
 
-  --primary: 244 89% 66%;
-  --primary-foreground: 210 40% 98%;
+  --primary: 222 100% 58%;           /* #2962ff TV blue */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 222 24% 16%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 222 14% 20%;
+  --secondary-foreground: 220 12% 86%;
 
-  --muted: 222 20% 15%;
-  --muted-foreground: 218 15% 65%;
+  --muted: 222 14% 18%;
+  --muted-foreground: 225 5% 55%;    /* #787b86 */
 
-  --accent: 244 60% 22%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 222 100% 22%;
+  --accent-foreground: 220 12% 96%;
 
-  --destructive: 0 72% 55%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 1 83% 63%;
+  --destructive-foreground: 0 0% 100%;
 
-  --bull: 152 76% 46%;
+  --bull: 173 58% 39%;               /* #26a69a */
   --bull-foreground: 0 0% 100%;
-  --bear: 0 78% 60%;
+  --bear: 1 83% 63%;                 /* #ef5350 */
   --bear-foreground: 0 0% 100%;
-  --warn: 38 92% 55%;
-  --warn-foreground: 224 39% 6%;
+  --warn: 32 100% 50%;               /* #ff9800 */
+  --warn-foreground: 220 26% 11%;
 
-  --border: 222 22% 18%;
-  --input: 222 22% 18%;
-  --ring: 244 89% 66%;
+  --border: 222 12% 25%;             /* #363a45 */
+  --input: 222 12% 25%;
+  --ring: 222 100% 58%;
 
-  --chart-1: 244 89% 66%;
-  --chart-2: 152 76% 46%;
-  --chart-3: 0 78% 60%;
-  --chart-4: 38 92% 55%;
-  --chart-5: 199 89% 60%;
+  --chart-1: 222 100% 58%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 1 83% 63%;
+  --chart-4: 32 100% 50%;
+  --chart-5: 265 84% 66%;
 
-  --sidebar: 223 34% 8%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: 244 89% 66%;
-  --sidebar-primary-foreground: 210 40% 98%;
-  --sidebar-accent: 222 24% 14%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-border: 222 22% 16%;
-  --sidebar-ring: 244 89% 66%;
+  --sidebar: 222 20% 13%;
+  --sidebar-foreground: 220 12% 86%;
+  --sidebar-primary: 222 100% 58%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 222 14% 18%;
+  --sidebar-accent-foreground: 220 12% 96%;
+  --sidebar-border: 222 12% 22%;
+  --sidebar-ring: 222 100% 58%;
 
   color-scheme: dark;
 }
 
 .light {
-  --background: 210 40% 99%;
-  --foreground: 224 39% 8%;
-  --surface-1: 210 30% 96%;
-  --surface-2: 210 24% 92%;
+  --background: 0 0% 100%;
+  --foreground: 220 26% 14%;
+  --surface-1: 220 20% 98%;
+  --surface-2: 220 16% 94%;
   --card: 0 0% 100%;
-  --card-foreground: 224 39% 8%;
+  --card-foreground: 220 26% 14%;
   --popover: 0 0% 100%;
-  --popover-foreground: 224 39% 8%;
-  --primary: 244 82% 58%;
-  --primary-foreground: 210 40% 99%;
-  --secondary: 210 30% 94%;
-  --secondary-foreground: 224 39% 12%;
-  --muted: 210 30% 94%;
-  --muted-foreground: 218 15% 40%;
-  --accent: 244 60% 92%;
-  --accent-foreground: 244 82% 30%;
-  --destructive: 0 72% 50%;
-  --destructive-foreground: 210 40% 99%;
-  --bull: 152 76% 36%;
+  --popover-foreground: 220 26% 14%;
+  --primary: 222 100% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 16% 94%;
+  --secondary-foreground: 220 26% 14%;
+  --muted: 220 16% 94%;
+  --muted-foreground: 225 8% 40%;
+  --accent: 222 100% 94%;
+  --accent-foreground: 222 100% 32%;
+  --destructive: 1 78% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --bull: 173 62% 32%;
   --bull-foreground: 0 0% 100%;
-  --bear: 0 78% 52%;
+  --bear: 1 78% 52%;
   --bear-foreground: 0 0% 100%;
-  --warn: 38 92% 48%;
-  --warn-foreground: 210 40% 99%;
-  --border: 220 15% 88%;
-  --input: 220 15% 88%;
-  --ring: 244 82% 58%;
+  --warn: 32 96% 46%;
+  --warn-foreground: 0 0% 100%;
+  --border: 220 14% 88%;
+  --input: 220 14% 88%;
+  --ring: 222 100% 52%;
   color-scheme: light;
 }
 
