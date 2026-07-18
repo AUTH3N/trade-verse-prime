@@ -5,17 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Vyro — paper trading design system.
+ * Dark-first, broker-grade. All colors are HSL tokens; components must
+ * consume them via bg-background, text-foreground, bg-primary, etc.
+ * Never hardcode hex colors in components.
  */
 
 @theme inline {
@@ -25,7 +18,6 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -46,6 +38,14 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
+  --color-bull: var(--bull);
+  --color-bull-foreground: var(--bull-foreground);
+  --color-bear: var(--bear);
+  --color-bear-foreground: var(--bear-foreground);
+  --color-warn: var(--warn);
+  --color-warn-foreground: var(--warn-foreground);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -59,86 +59,126 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
+/* Vyro dark palette — deep navy surfaces, electric indigo primary,
+   emerald bull / crimson bear tuned for Indian broker aesthetic. */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --radius: 0.75rem;
+
+  --background: 224 39% 6%;
+  --foreground: 210 40% 98%;
+
+  --surface-1: 223 32% 9%;
+  --surface-2: 222 28% 13%;
+
+  --card: 223 32% 9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 28% 11%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 244 89% 66%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 222 24% 16%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 222 20% 15%;
+  --muted-foreground: 218 15% 65%;
+
+  --accent: 244 60% 22%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 72% 55%;
+  --destructive-foreground: 210 40% 98%;
+
+  --bull: 152 76% 46%;
+  --bull-foreground: 0 0% 100%;
+  --bear: 0 78% 60%;
+  --bear-foreground: 0 0% 100%;
+  --warn: 38 92% 55%;
+  --warn-foreground: 224 39% 6%;
+
+  --border: 222 22% 18%;
+  --input: 222 22% 18%;
+  --ring: 244 89% 66%;
+
+  --chart-1: 244 89% 66%;
+  --chart-2: 152 76% 46%;
+  --chart-3: 0 78% 60%;
+  --chart-4: 38 92% 55%;
+  --chart-5: 199 89% 60%;
+
+  --sidebar: 223 34% 8%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 244 89% 66%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 222 24% 14%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 222 22% 16%;
+  --sidebar-ring: 244 89% 66%;
+
+  color-scheme: dark;
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+.light {
+  --background: 210 40% 99%;
+  --foreground: 224 39% 8%;
+  --surface-1: 210 30% 96%;
+  --surface-2: 210 24% 92%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 39% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 39% 8%;
+  --primary: 244 82% 58%;
+  --primary-foreground: 210 40% 99%;
+  --secondary: 210 30% 94%;
+  --secondary-foreground: 224 39% 12%;
+  --muted: 210 30% 94%;
+  --muted-foreground: 218 15% 40%;
+  --accent: 244 60% 92%;
+  --accent-foreground: 244 82% 30%;
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 210 40% 99%;
+  --bull: 152 76% 36%;
+  --bull-foreground: 0 0% 100%;
+  --bear: 0 78% 52%;
+  --bear-foreground: 0 0% 100%;
+  --warn: 38 92% 48%;
+  --warn-foreground: 210 40% 99%;
+  --border: 220 15% 88%;
+  --input: 220 15% 88%;
+  --ring: 244 82% 58%;
+  color-scheme: light;
 }
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: hsl(var(--color-border));
   }
-
+  html, body, #root {
+    height: 100%;
+  }
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: hsl(var(--color-background));
+    color: hsl(var(--color-foreground));
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+  /* Numeric tabular alignment for prices, P&L, quantities */
+  .tabular, .price {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 }
+
+@utility text-bull { color: hsl(var(--color-bull)); }
+@utility text-bear { color: hsl(var(--color-bear)); }
+@utility bg-bull { background-color: hsl(var(--color-bull)); }
+@utility bg-bear { background-color: hsl(var(--color-bear)); }
+@utility bg-surface-1 { background-color: hsl(var(--color-surface-1)); }
+@utility bg-surface-2 { background-color: hsl(var(--color-surface-2)); }
