@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronDown, Layers, TrendingUp } from "lucide-react";
+import { ChevronDown, Layers, LineChart, TrendingUp, X } from "lucide-react";
 import { formatPct, signedClass } from "@/lib/format";
+import { greekTone, ivHeatStyle, oiBarStyle, tickTone } from "@/lib/heat";
+import { OptionChart } from "@/components/option-chart";
 
 export const Route = createFileRoute("/_authenticated/fno")({
   head: () => ({
@@ -196,24 +198,82 @@ function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number
 }
 
 function OptionChain({ rows, atm }: { rows: Row[]; atm: number }) {
+  const [open, setOpen] = useState<{ strike: number; side: "ce" | "pe"; ltp: number; chg: number } | null>(null);
+  const maxOi = useMemo(
+    () => rows.reduce((m, r) => Math.max(m, r.ceOi, r.peOi), 0),
+    [rows],
+  );
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface-1">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-surface-2/60 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <div className="text-center">Calls</div>
-        <div className="px-4 text-center">Strike</div>
-        <div className="text-center">Puts</div>
+    <div className="space-y-3">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface-1">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-surface-2/60 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="text-center">Calls</div>
+          <div className="px-4 text-center">Strike</div>
+          <div className="text-center">Puts</div>
+        </div>
+        <div className="grid grid-cols-[1fr_auto_1fr] text-[11px] tabular-nums">
+          <HeaderRow side="ce" />
+          <div />
+          <HeaderRow side="pe" />
+        </div>
+        <div className="divide-y divide-border">
+          {rows.map((r) => (
+            <ChainRow
+              key={r.strike}
+              row={r}
+              isAtm={r.strike === atm}
+              maxOi={maxOi}
+              onOpen={(side) =>
+                setOpen({
+                  strike: r.strike,
+                  side,
+                  ltp: side === "ce" ? r.ceLtp : r.peLtp,
+                  chg: side === "ce" ? r.ceChg : r.peChg,
+                })
+              }
+            />
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-[1fr_auto_1fr] text-[11px] tabular-nums">
-        {/* header row */}
-        <HeaderRow side="ce" />
-        <div />
-        <HeaderRow side="pe" />
-      </div>
-      <div className="divide-y divide-border">
-        {rows.map((r) => (
-          <ChainRow key={r.strike} row={r} isAtm={r.strike === atm} />
-        ))}
-      </div>
+
+      {open && (
+        <div className="rounded-2xl border border-border bg-surface-1 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span
+                className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase ${
+                  open.side === "ce" ? "bg-bull/15 text-bull" : "bg-bear/15 text-bear"
+                }`}
+              >
+                {open.side.toUpperCase()} · {open.strike}
+              </span>
+              <span className="text-sm font-semibold tabular-nums" style={tickTone(open.chg)}>
+                ₹{open.ltp.toFixed(2)}
+              </span>
+              <span className="text-[11px] font-medium tabular-nums" style={tickTone(open.chg)}>
+                {open.chg >= 0 ? "+" : ""}
+                {open.chg.toFixed(2)}%
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(null)}
+              className="rounded-md p-1 text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+              aria-label="Close chart"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+          <OptionChart
+            key={`${open.side}-${open.strike}`}
+            seed={open.strike * 7 + (open.side === "ce" ? 1 : 2)}
+            base={open.ltp}
+            bullish={open.chg >= 0}
+            height={220}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -235,27 +295,71 @@ function HeaderRow({ side }: { side: "ce" | "pe" }) {
   );
 }
 
-function ChainRow({ row, isAtm }: { row: Row; isAtm: boolean }) {
+function ChainRow({
+  row,
+  isAtm,
+  maxOi,
+  onOpen,
+}: {
+  row: Row;
+  isAtm: boolean;
+  maxOi: number;
+  onOpen: (side: "ce" | "pe") => void;
+}) {
   return (
-    <div className={`grid grid-cols-[1fr_auto_1fr] items-center text-[11px] tabular-nums ${isAtm ? "bg-primary/10" : ""}`}>
-      {/* CE side */}
-      <div className={`grid grid-cols-4 gap-1 px-3 py-2 ${row.itmCE ? "bg-bull/5" : ""}`}>
-        <span className="text-center text-muted-foreground">{fmtOi(row.ceOi)}</span>
-        <span className="text-center text-muted-foreground">{row.ceIv.toFixed(1)}</span>
-        <span className={`text-center font-semibold ${signedClass(row.ceChg)}`}>{row.ceLtp.toFixed(2)}</span>
-        <span className="text-center text-muted-foreground">{row.ceDelta.toFixed(2)}</span>
-      </div>
+    <div
+      className={`grid grid-cols-[1fr_auto_1fr] items-center text-[11px] tabular-nums ${
+        isAtm ? "bg-primary/10" : ""
+      }`}
+    >
+      {/* CE side — click to open chart */}
+      <button
+        type="button"
+        onClick={() => onOpen("ce")}
+        style={oiBarStyle(row.ceOi, maxOi, "ce")}
+        className={`group grid grid-cols-4 gap-1 px-3 py-2 text-left transition hover:bg-bull/10 ${
+          row.itmCE ? "bg-bull/[0.06]" : ""
+        }`}
+      >
+        <span className="text-center text-[10.5px] text-muted-foreground">{fmtOi(row.ceOi)}</span>
+        <span className="rounded text-center" style={ivHeatStyle(row.ceIv)}>
+          {row.ceIv.toFixed(1)}
+        </span>
+        <span className="flex items-center justify-center gap-0.5 font-semibold" style={tickTone(row.ceChg)}>
+          <LineChart className="size-2.5 opacity-0 transition group-hover:opacity-60" />
+          {row.ceLtp.toFixed(2)}
+        </span>
+        <span className="text-center font-medium" style={greekTone(row.ceDelta)}>
+          {row.ceDelta.toFixed(2)}
+        </span>
+      </button>
+
       {/* Strike */}
       <div className={`px-3 py-2 text-center text-xs font-bold ${isAtm ? "text-primary" : "text-foreground"}`}>
         {row.strike}
       </div>
+
       {/* PE side */}
-      <div className={`grid grid-cols-4 gap-1 px-3 py-2 ${row.itmPE ? "bg-bear/5" : ""}`}>
-        <span className="text-center text-muted-foreground">{row.peDelta.toFixed(2)}</span>
-        <span className={`text-center font-semibold ${signedClass(row.peChg)}`}>{row.peLtp.toFixed(2)}</span>
-        <span className="text-center text-muted-foreground">{row.peIv.toFixed(1)}</span>
-        <span className="text-center text-muted-foreground">{fmtOi(row.peOi)}</span>
-      </div>
+      <button
+        type="button"
+        onClick={() => onOpen("pe")}
+        style={oiBarStyle(row.peOi, maxOi, "pe")}
+        className={`group grid grid-cols-4 gap-1 px-3 py-2 text-left transition hover:bg-bear/10 ${
+          row.itmPE ? "bg-bear/[0.06]" : ""
+        }`}
+      >
+        <span className="text-center font-medium" style={greekTone(row.peDelta)}>
+          {row.peDelta.toFixed(2)}
+        </span>
+        <span className="flex items-center justify-center gap-0.5 font-semibold" style={tickTone(row.peChg)}>
+          <LineChart className="size-2.5 opacity-0 transition group-hover:opacity-60" />
+          {row.peLtp.toFixed(2)}
+        </span>
+        <span className="rounded text-center" style={ivHeatStyle(row.peIv)}>
+          {row.peIv.toFixed(1)}
+        </span>
+        <span className="text-center text-[10.5px] text-muted-foreground">{fmtOi(row.peOi)}</span>
+      </button>
     </div>
   );
 }
