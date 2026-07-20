@@ -13,10 +13,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
+import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedPortfolioRouteImport } from './routes/_authenticated/portfolio'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedMoreRouteImport } from './routes/_authenticated/more'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedFundsRouteImport } from './routes/_authenticated/funds'
 import { Route as AuthenticatedFnoRouteImport } from './routes/_authenticated/fno'
 
 const AuthRoute = AuthRouteImport.update({
@@ -36,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
   id: '/watchlist',
   path: '/watchlist',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPortfolioRoute = AuthenticatedPortfolioRouteImport.update({
@@ -58,6 +65,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFundsRoute = AuthenticatedFundsRouteImport.update({
+  id: '/funds',
+  path: '/funds',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFnoRoute = AuthenticatedFnoRouteImport.update({
   id: '/fno',
   path: '/fno',
@@ -68,20 +80,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/fno': typeof AuthenticatedFnoRoute
+  '/funds': typeof AuthenticatedFundsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/more': typeof AuthenticatedMoreRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/portfolio': typeof AuthenticatedPortfolioRoute
+  '/search': typeof AuthenticatedSearchRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/fno': typeof AuthenticatedFnoRoute
+  '/funds': typeof AuthenticatedFundsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/more': typeof AuthenticatedMoreRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/portfolio': typeof AuthenticatedPortfolioRoute
+  '/search': typeof AuthenticatedSearchRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
 }
 export interface FileRoutesById {
@@ -90,10 +106,12 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/fno': typeof AuthenticatedFnoRoute
+  '/_authenticated/funds': typeof AuthenticatedFundsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/more': typeof AuthenticatedMoreRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
   '/_authenticated/portfolio': typeof AuthenticatedPortfolioRoute
+  '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
 }
 export interface FileRouteTypes {
@@ -102,20 +120,24 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/fno'
+    | '/funds'
     | '/home'
     | '/more'
     | '/orders'
     | '/portfolio'
+    | '/search'
     | '/watchlist'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/fno'
+    | '/funds'
     | '/home'
     | '/more'
     | '/orders'
     | '/portfolio'
+    | '/search'
     | '/watchlist'
   id:
     | '__root__'
@@ -123,10 +145,12 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/fno'
+    | '/_authenticated/funds'
     | '/_authenticated/home'
     | '/_authenticated/more'
     | '/_authenticated/orders'
     | '/_authenticated/portfolio'
+    | '/_authenticated/search'
     | '/_authenticated/watchlist'
   fileRoutesById: FileRoutesById
 }
@@ -166,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWatchlistRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/search': {
+      id: '/_authenticated/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portfolio': {
       id: '/_authenticated/portfolio'
       path: '/portfolio'
@@ -194,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/funds': {
+      id: '/_authenticated/funds'
+      path: '/funds'
+      fullPath: '/funds'
+      preLoaderRoute: typeof AuthenticatedFundsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fno': {
       id: '/_authenticated/fno'
       path: '/fno'
@@ -206,19 +244,23 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedFnoRoute: typeof AuthenticatedFnoRoute
+  AuthenticatedFundsRoute: typeof AuthenticatedFundsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMoreRoute: typeof AuthenticatedMoreRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
   AuthenticatedPortfolioRoute: typeof AuthenticatedPortfolioRoute
+  AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFnoRoute: AuthenticatedFnoRoute,
+  AuthenticatedFundsRoute: AuthenticatedFundsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMoreRoute: AuthenticatedMoreRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
   AuthenticatedPortfolioRoute: AuthenticatedPortfolioRoute,
+  AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
 }
 
