@@ -18,6 +18,7 @@ import { Route as AuthenticatedPortfolioRouteImport } from './routes/_authentica
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedMoreRouteImport } from './routes/_authenticated/more'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedFundsRouteImport } from './routes/_authenticated/funds'
 import { Route as AuthenticatedFnoRouteImport } from './routes/_authenticated/fno'
 
 const AuthRoute = AuthRouteImport.update({
@@ -64,6 +65,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFundsRoute = AuthenticatedFundsRouteImport.update({
+  id: '/funds',
+  path: '/funds',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFnoRoute = AuthenticatedFnoRouteImport.update({
   id: '/fno',
   path: '/fno',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/fno': typeof AuthenticatedFnoRoute
+  '/funds': typeof AuthenticatedFundsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/more': typeof AuthenticatedMoreRoute
   '/orders': typeof AuthenticatedOrdersRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/fno': typeof AuthenticatedFnoRoute
+  '/funds': typeof AuthenticatedFundsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/more': typeof AuthenticatedMoreRoute
   '/orders': typeof AuthenticatedOrdersRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/fno': typeof AuthenticatedFnoRoute
+  '/_authenticated/funds': typeof AuthenticatedFundsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/more': typeof AuthenticatedMoreRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/fno'
+    | '/funds'
     | '/home'
     | '/more'
     | '/orders'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/fno'
+    | '/funds'
     | '/home'
     | '/more'
     | '/orders'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/fno'
+    | '/_authenticated/funds'
     | '/_authenticated/home'
     | '/_authenticated/more'
     | '/_authenticated/orders'
@@ -213,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/funds': {
+      id: '/_authenticated/funds'
+      path: '/funds'
+      fullPath: '/funds'
+      preLoaderRoute: typeof AuthenticatedFundsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fno': {
       id: '/_authenticated/fno'
       path: '/fno'
@@ -225,6 +244,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedFnoRoute: typeof AuthenticatedFnoRoute
+  AuthenticatedFundsRoute: typeof AuthenticatedFundsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMoreRoute: typeof AuthenticatedMoreRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
@@ -235,6 +255,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFnoRoute: AuthenticatedFnoRoute,
+  AuthenticatedFundsRoute: AuthenticatedFundsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMoreRoute: AuthenticatedMoreRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
