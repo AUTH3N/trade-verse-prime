@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Banknote, ChevronRight, History, Wallet as WalletIcon } from "lucide-react";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { getWallet } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/_authenticated/funds")({
