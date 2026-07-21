@@ -341,3 +341,37 @@ function MutualFundsTab() {
     </div>
   );
 }
+
+function OptionChainFilters() {
+  const [seg, setSeg] = useState<"Equity" | "Commodities">("Equity");
+  const [expiryToday, setExpiryToday] = useState(false);
+  return (
+    <div className="mt-3 flex gap-2">
+      {(["Equity", "Commodities"] as const).map((s) => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => setSeg(s)}
+          className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
+            seg === s
+              ? "bg-primary text-primary-foreground"
+              : "border border-primary text-primary"
+          }`}
+        >
+          {s}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={() => setExpiryToday((v) => !v)}
+        className={`rounded-full border px-4 py-1.5 text-xs font-semibold ${
+          expiryToday
+            ? "border-primary bg-primary/15 text-primary"
+            : "border-border text-muted-foreground"
+        }`}
+      >
+        Expiry today
+      </button>
+    </div>
+  );
+}
