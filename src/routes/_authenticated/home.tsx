@@ -211,7 +211,7 @@ function StocksTab() {
         <div className="text-base font-bold">Vyro AI: Your Investing Buddy</div>
         <div className="mt-0.5 text-xs text-muted-foreground">Analyse. Screen. Explore. Ask.</div>
         <div className="absolute right-4 top-1/2 size-12 -translate-y-1/2 rounded-full bg-gradient-to-br from-primary to-bear opacity-90 blur-sm" />
-      </section>
+      </button>
     </div>
   );
 }
