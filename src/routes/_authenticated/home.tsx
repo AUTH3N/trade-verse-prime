@@ -250,17 +250,8 @@ function FnoTab() {
           </div>
         </div>
 
-        <div className="mt-3 flex gap-2">
-          <button className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground">
-            Equity
-          </button>
-          <button className="rounded-full border border-primary px-4 py-1.5 text-xs font-semibold text-primary">
-            Commodities
-          </button>
-          <button className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-muted-foreground">
-            Expiry today
-          </button>
-        </div>
+        <OptionChainFilters />
+
 
         <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {OPTION_INDEXES.map((o) => (
