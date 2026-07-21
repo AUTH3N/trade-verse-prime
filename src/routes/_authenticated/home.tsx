@@ -99,7 +99,7 @@ function IndicesRow() {
       <SectionTitle
         title="Market indices"
         right={
-          <button className="flex items-center gap-0.5 text-sm font-medium text-primary">
+          <button onClick={() => soon("All indices")} className="flex items-center gap-0.5 text-sm font-medium text-primary">
             View all <ChevronRight className="size-4" />
           </button>
         }
