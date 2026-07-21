@@ -141,7 +141,10 @@ function InvestmentsView() {
             <div className="text-sm font-semibold">Mutual Funds</div>
             <div className="text-xs text-muted-foreground">Start your first SIP with top funds</div>
           </div>
-          <button className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary">
+          <button
+            onClick={() => soon("Mutual Funds")}
+            className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary"
+          >
             Explore
           </button>
         </div>
@@ -150,7 +153,10 @@ function InvestmentsView() {
             <div className="text-sm font-semibold">ETFs</div>
             <div className="text-xs text-muted-foreground">Start with top performing ETFs</div>
           </div>
-          <button className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary">
+          <button
+            onClick={() => soon("ETFs")}
+            className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary"
+          >
             Explore
           </button>
         </div>
