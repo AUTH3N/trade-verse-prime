@@ -182,6 +182,8 @@ function StocksTab() {
           {INVESTMENT_PRODUCTS.map((p) => (
             <button
               key={p.label}
+              onClick={() => soon(p.label)}
+              type="button"
               className="flex flex-col items-center gap-1.5 rounded-xl bg-surface-1 p-2 text-center transition hover:bg-surface-2"
             >
               <div className="relative grid size-11 place-items-center rounded-lg bg-background text-xl">
@@ -198,7 +200,11 @@ function StocksTab() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-r from-surface-1 via-surface-2 to-surface-1 p-4">
+      <button
+        type="button"
+        onClick={() => soon("Vyro AI")}
+        className="relative w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-r from-surface-1 via-surface-2 to-surface-1 p-4 text-left"
+      >
         <div className="mb-1 inline-block rounded bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground">
           NEW
         </div>
