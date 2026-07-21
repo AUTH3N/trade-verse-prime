@@ -224,9 +224,9 @@ function FnoTab() {
           <div className="flex items-center gap-1.5 text-sm font-semibold">
             Position summary <Eye className="size-4 text-primary" />
           </div>
-          <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+          <Link to="/portfolio" className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
             <TrendingUp className="size-4" /> Analyze
-          </button>
+          </Link>
         </div>
         <Link
           to="/portfolio"
