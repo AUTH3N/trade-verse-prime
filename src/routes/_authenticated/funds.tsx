@@ -60,9 +60,9 @@ function FundsPage() {
       </div>
 
       <div className="mt-3 space-y-2">
-        <MenuRow icon={<Banknote className="size-5" />} label="Amount due details" />
-        <MenuRow icon={<History className="size-5" />} label="Track deposit & withdraw request" chevron />
-        <MenuRow icon={<WalletIcon className="size-5" />} label="Pledge for margin/unpledge" chevron />
+        <MenuRow icon={<Banknote className="size-5" />} label="Amount due details" onClick={() => toast.info("Amount due details — coming soon")} />
+        <MenuRow icon={<History className="size-5" />} label="Track deposit & withdraw request" chevron onClick={() => toast.info("Deposit/Withdraw history — coming soon")} />
+        <MenuRow icon={<WalletIcon className="size-5" />} label="Pledge for margin/unpledge" chevron onClick={() => toast.info("Pledge — coming soon")} />
       </div>
 
       <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
