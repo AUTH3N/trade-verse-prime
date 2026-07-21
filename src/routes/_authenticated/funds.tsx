@@ -73,10 +73,10 @@ function FundsPage() {
 
       <div className="mt-auto pt-6" />
       <div className="sticky bottom-20 grid grid-cols-2 gap-3 bg-background pb-2 pt-2">
-        <button className="rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground">
+        <button onClick={() => toast.info("Deposit — coming soon")} className="rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground">
           Deposit
         </button>
-        <button className="rounded-xl border border-primary py-3 text-sm font-semibold text-primary">
+        <button onClick={() => toast.info("Withdraw — coming soon")} className="rounded-xl border border-primary py-3 text-sm font-semibold text-primary">
           Withdraw
         </button>
       </div>
