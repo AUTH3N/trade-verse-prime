@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronRight, Eye, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 import { formatPct, signedClass } from "@/lib/format";
+
+const soon = (what: string) => toast.info(`${what} — coming soon`);
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
