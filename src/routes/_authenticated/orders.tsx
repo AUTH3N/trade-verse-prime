@@ -71,7 +71,9 @@ function OrdersPage() {
               </div>
             ))}
           </div>
-          <ChevronDown className="size-5 text-primary" />
+          <button onClick={() => soon("Indices detail")} className="text-primary" aria-label="Expand indices">
+            <ChevronDown className="size-5" />
+          </button>
         </div>
       </section>
 
