@@ -147,14 +147,16 @@ function MenuItem({
   label,
   chevron,
   external,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   chevron?: boolean;
   external?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <button className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+    <button onClick={onClick} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
       <span className="grid size-9 place-items-center rounded-full bg-background text-primary">
         {icon}
       </span>
