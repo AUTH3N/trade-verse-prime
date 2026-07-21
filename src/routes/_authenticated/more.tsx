@@ -121,9 +121,9 @@ function MorePage() {
   );
 }
 
-function QuickTile({ icon, label }: { icon: React.ReactNode; label: string }) {
+function QuickTile({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
-    <button className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-surface-1 p-3 text-primary">
+    <button onClick={onClick} className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-surface-1 p-3 text-primary">
       {icon}
       <span className="text-[11px] font-medium text-foreground">{label}</span>
     </button>
@@ -132,7 +132,10 @@ function QuickTile({ icon, label }: { icon: React.ReactNode; label: string }) {
 
 function ReportTile({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <button className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-left text-primary">
+    <button
+      onClick={() => toast.info(`${label} — coming soon`)}
+      className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-left text-primary"
+    >
       {icon}
       <span className="text-xs font-medium text-foreground">{label}</span>
     </button>
