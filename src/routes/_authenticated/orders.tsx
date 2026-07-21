@@ -118,10 +118,10 @@ function OrdersPage() {
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
-            <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+            <button onClick={() => soon("Filter")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="Filter">
               <Filter className="size-4" />
             </button>
-            <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+            <button onClick={() => soon("More options")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="More">
               <MoreVertical className="size-4" />
             </button>
           </div>
