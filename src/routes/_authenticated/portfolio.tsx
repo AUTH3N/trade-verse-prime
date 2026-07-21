@@ -198,13 +198,13 @@ function PositionsView() {
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
-        <button className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-1 px-3 py-2 text-sm">
+        <button onClick={() => soon("Analyze positions")} className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-1 px-3 py-2 text-sm">
           <TrendingUp className="size-4" /> Analyze
         </button>
-        <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+        <button onClick={() => soon("Filter")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="Filter">
           <Filter className="size-4" />
         </button>
-        <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+        <button onClick={() => soon("More options")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="More">
           <MoreVertical className="size-4" />
         </button>
       </div>
@@ -217,7 +217,10 @@ function PositionsView() {
           </span>
           Today's positions
         </label>
-        <button className="text-sm text-muted-foreground underline decoration-dotted">
+        <button
+          onClick={() => toast.warning("Square off all — paper trade action queued")}
+          className="text-sm text-muted-foreground underline decoration-dotted"
+        >
           Square off all
         </button>
       </div>
