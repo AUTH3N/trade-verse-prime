@@ -110,13 +110,15 @@ function MenuRow({
   icon,
   label,
   chevron,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   chevron?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <button className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-1 px-4 py-3.5 text-left">
+    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-1 px-4 py-3.5 text-left">
       <span className="grid size-9 place-items-center rounded-full bg-background text-primary">
         {icon}
       </span>
