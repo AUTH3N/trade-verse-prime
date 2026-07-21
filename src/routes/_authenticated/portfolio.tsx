@@ -44,7 +44,7 @@ function PortfolioPage() {
               </div>
             ))}
           </div>
-          <button className="text-primary">
+          <button onClick={() => soon("Indices detail")} className="text-primary" aria-label="Expand indices">
             <ChevronDown className="size-5" />
           </button>
         </div>
