@@ -29,9 +29,10 @@ const TRENDING = [
 function SearchPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [recentList, setRecentList] = useState(RECENT);
   const recent = useMemo(
-    () => RECENT.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())),
-    [q],
+    () => recentList.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())),
+    [q, recentList],
   );
   const trending = useMemo(
     () => TRENDING.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())),
@@ -73,9 +74,18 @@ function SearchPage() {
       <div className="pt-4">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Recently viewed</div>
-          <button className="text-sm text-primary">Clear all</button>
+          <button
+            onClick={() => setRecentList([])}
+            disabled={recentList.length === 0}
+            className="text-sm text-primary disabled:opacity-40"
+          >
+            Clear all
+          </button>
         </div>
         <div className="mt-2 divide-y divide-border">
+          {recent.length === 0 && (
+            <div className="py-3 text-xs text-muted-foreground">No recent searches</div>
+          )}
           {recent.map((r) => (
             <Row key={r.sym} icon={<Clock className="size-4" />} {...r} />
           ))}

@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronDown, Filter, MoreVertical, Search, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 import { formatPct, signedClass } from "@/lib/format";
+
+const soon = (what: string) => toast.info(`${what} — coming soon`);
 
 export const Route = createFileRoute("/_authenticated/portfolio")({
   head: () => ({ meta: [{ title: "Portfolio — Vyro" }] }),
@@ -41,7 +44,7 @@ function PortfolioPage() {
               </div>
             ))}
           </div>
-          <button className="text-primary">
+          <button onClick={() => soon("Indices detail")} className="text-primary" aria-label="Expand indices">
             <ChevronDown className="size-5" />
           </button>
         </div>
@@ -138,7 +141,10 @@ function InvestmentsView() {
             <div className="text-sm font-semibold">Mutual Funds</div>
             <div className="text-xs text-muted-foreground">Start your first SIP with top funds</div>
           </div>
-          <button className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary">
+          <button
+            onClick={() => soon("Mutual Funds")}
+            className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary"
+          >
             Explore
           </button>
         </div>
@@ -147,7 +153,10 @@ function InvestmentsView() {
             <div className="text-sm font-semibold">ETFs</div>
             <div className="text-xs text-muted-foreground">Start with top performing ETFs</div>
           </div>
-          <button className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary">
+          <button
+            onClick={() => soon("ETFs")}
+            className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary"
+          >
             Explore
           </button>
         </div>
@@ -189,13 +198,13 @@ function PositionsView() {
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
-        <button className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-1 px-3 py-2 text-sm">
+        <button onClick={() => soon("Analyze positions")} className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-1 px-3 py-2 text-sm">
           <TrendingUp className="size-4" /> Analyze
         </button>
-        <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+        <button onClick={() => soon("Filter")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="Filter">
           <Filter className="size-4" />
         </button>
-        <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+        <button onClick={() => soon("More options")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="More">
           <MoreVertical className="size-4" />
         </button>
       </div>
@@ -208,7 +217,10 @@ function PositionsView() {
           </span>
           Today's positions
         </label>
-        <button className="text-sm text-muted-foreground underline decoration-dotted">
+        <button
+          onClick={() => toast.warning("Square off all — paper trade action queued")}
+          className="text-sm text-muted-foreground underline decoration-dotted"
+        >
           Square off all
         </button>
       </div>

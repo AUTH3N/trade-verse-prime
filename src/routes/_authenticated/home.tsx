@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronRight, Eye, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 import { formatPct, signedClass } from "@/lib/format";
+
+const soon = (what: string) => toast.info(`${what} — coming soon`);
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -96,7 +99,7 @@ function IndicesRow() {
       <SectionTitle
         title="Market indices"
         right={
-          <button className="flex items-center gap-0.5 text-sm font-medium text-primary">
+          <button onClick={() => soon("All indices")} className="flex items-center gap-0.5 text-sm font-medium text-primary">
             View all <ChevronRight className="size-4" />
           </button>
         }
@@ -179,6 +182,8 @@ function StocksTab() {
           {INVESTMENT_PRODUCTS.map((p) => (
             <button
               key={p.label}
+              onClick={() => soon(p.label)}
+              type="button"
               className="flex flex-col items-center gap-1.5 rounded-xl bg-surface-1 p-2 text-center transition hover:bg-surface-2"
             >
               <div className="relative grid size-11 place-items-center rounded-lg bg-background text-xl">
@@ -195,14 +200,18 @@ function StocksTab() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-r from-surface-1 via-surface-2 to-surface-1 p-4">
+      <button
+        type="button"
+        onClick={() => soon("Vyro AI")}
+        className="relative w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-r from-surface-1 via-surface-2 to-surface-1 p-4 text-left"
+      >
         <div className="mb-1 inline-block rounded bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground">
           NEW
         </div>
         <div className="text-base font-bold">Vyro AI: Your Investing Buddy</div>
         <div className="mt-0.5 text-xs text-muted-foreground">Analyse. Screen. Explore. Ask.</div>
         <div className="absolute right-4 top-1/2 size-12 -translate-y-1/2 rounded-full bg-gradient-to-br from-primary to-bear opacity-90 blur-sm" />
-      </section>
+      </button>
     </div>
   );
 }
@@ -215,9 +224,9 @@ function FnoTab() {
           <div className="flex items-center gap-1.5 text-sm font-semibold">
             Position summary <Eye className="size-4 text-primary" />
           </div>
-          <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+          <Link to="/portfolio" className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
             <TrendingUp className="size-4" /> Analyze
-          </button>
+          </Link>
         </div>
         <Link
           to="/portfolio"
@@ -241,17 +250,8 @@ function FnoTab() {
           </div>
         </div>
 
-        <div className="mt-3 flex gap-2">
-          <button className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground">
-            Equity
-          </button>
-          <button className="rounded-full border border-primary px-4 py-1.5 text-xs font-semibold text-primary">
-            Commodities
-          </button>
-          <button className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-muted-foreground">
-            Expiry today
-          </button>
-        </div>
+        <OptionChainFilters />
+
 
         <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {OPTION_INDEXES.map((o) => (
@@ -338,6 +338,40 @@ function MutualFundsTab() {
       <div className="mt-1 text-sm text-muted-foreground">
         Browse curated NFOs, top SIPs, and instant KYC — arriving shortly.
       </div>
+    </div>
+  );
+}
+
+function OptionChainFilters() {
+  const [seg, setSeg] = useState<"Equity" | "Commodities">("Equity");
+  const [expiryToday, setExpiryToday] = useState(false);
+  return (
+    <div className="mt-3 flex gap-2">
+      {(["Equity", "Commodities"] as const).map((s) => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => setSeg(s)}
+          className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
+            seg === s
+              ? "bg-primary text-primary-foreground"
+              : "border border-primary text-primary"
+          }`}
+        >
+          {s}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={() => setExpiryToday((v) => !v)}
+        className={`rounded-full border px-4 py-1.5 text-xs font-semibold ${
+          expiryToday
+            ? "border-primary bg-primary/15 text-primary"
+            : "border-border text-muted-foreground"
+        }`}
+      >
+        Expiry today
+      </button>
     </div>
   );
 }

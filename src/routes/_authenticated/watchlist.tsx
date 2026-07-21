@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Bookmark, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 import { formatPct, signedClass } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/watchlist")({
@@ -46,14 +47,22 @@ function WatchlistPage() {
             {l}
           </button>
         ))}
-        <button className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-primary">
+        <button
+          onClick={() => toast.info("New watchlist — coming soon")}
+          className="grid size-8 shrink-0 place-items-center rounded-full border border-border text-primary"
+          aria-label="Add watchlist"
+        >
           <Plus className="size-4" />
         </button>
       </div>
 
       <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1">
         {STOCKS.map((s) => (
-          <div key={s.sym} className="flex items-center gap-3 px-4 py-3">
+          <button
+            key={s.sym}
+            onClick={() => toast.info(`${s.sym} detail — coming soon`)}
+            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-2"
+          >
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold">{s.sym}</div>
               <div className="text-[11px] text-muted-foreground">{s.exch} · EQ</div>
@@ -67,10 +76,17 @@ function WatchlistPage() {
                 {s.chg.toFixed(2)} ({formatPct(s.pct)})
               </div>
             </div>
-            <button className="text-primary" aria-label="Bookmark">
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                toast.success(`${s.sym} bookmarked`);
+              }}
+              className="text-primary"
+              aria-label="Bookmark"
+            >
               <Bookmark className="size-4 fill-current" />
-            </button>
-          </div>
+            </span>
+          </button>
         ))}
       </div>
     </div>

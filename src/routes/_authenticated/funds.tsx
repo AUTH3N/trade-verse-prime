@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Banknote, ChevronRight, History, Wallet as WalletIcon } from "lucide-react";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { getWallet } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/_authenticated/funds")({
@@ -59,9 +60,9 @@ function FundsPage() {
       </div>
 
       <div className="mt-3 space-y-2">
-        <MenuRow icon={<Banknote className="size-5" />} label="Amount due details" />
-        <MenuRow icon={<History className="size-5" />} label="Track deposit & withdraw request" chevron />
-        <MenuRow icon={<WalletIcon className="size-5" />} label="Pledge for margin/unpledge" chevron />
+        <MenuRow icon={<Banknote className="size-5" />} label="Amount due details" onClick={() => toast.info("Amount due details — coming soon")} />
+        <MenuRow icon={<History className="size-5" />} label="Track deposit & withdraw request" chevron onClick={() => toast.info("Deposit/Withdraw history — coming soon")} />
+        <MenuRow icon={<WalletIcon className="size-5" />} label="Pledge for margin/unpledge" chevron onClick={() => toast.info("Pledge — coming soon")} />
       </div>
 
       <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
@@ -72,10 +73,10 @@ function FundsPage() {
 
       <div className="mt-auto pt-6" />
       <div className="sticky bottom-20 grid grid-cols-2 gap-3 bg-background pb-2 pt-2">
-        <button className="rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground">
+        <button onClick={() => toast.info("Deposit — coming soon")} className="rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground">
           Deposit
         </button>
-        <button className="rounded-xl border border-primary py-3 text-sm font-semibold text-primary">
+        <button onClick={() => toast.info("Withdraw — coming soon")} className="rounded-xl border border-primary py-3 text-sm font-semibold text-primary">
           Withdraw
         </button>
       </div>
@@ -109,13 +110,15 @@ function MenuRow({
   icon,
   label,
   chevron,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   chevron?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <button className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-1 px-4 py-3.5 text-left">
+    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-1 px-4 py-3.5 text-left">
       <span className="grid size-9 place-items-center rounded-full bg-background text-primary">
         {icon}
       </span>

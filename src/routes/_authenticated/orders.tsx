@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ChevronDown, Filter, MoreVertical, Search } from "lucide-react";
+import { toast } from "sonner";
 import { formatPct, signedClass } from "@/lib/format";
+
+const soon = (what: string) => toast.info(`${what} — coming soon`);
 
 export const Route = createFileRoute("/_authenticated/orders")({
   head: () => ({ meta: [{ title: "Orders — Vyro" }] }),
@@ -68,7 +71,9 @@ function OrdersPage() {
               </div>
             ))}
           </div>
-          <ChevronDown className="size-5 text-primary" />
+          <button onClick={() => soon("Indices detail")} className="text-primary" aria-label="Expand indices">
+            <ChevronDown className="size-5" />
+          </button>
         </div>
       </section>
 
@@ -113,10 +118,10 @@ function OrdersPage() {
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
-            <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+            <button onClick={() => soon("Filter")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="Filter">
               <Filter className="size-4" />
             </button>
-            <button className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1">
+            <button onClick={() => soon("More options")} className="grid size-10 place-items-center rounded-xl border border-border bg-surface-1" aria-label="More">
               <MoreVertical className="size-4" />
             </button>
           </div>
