@@ -61,14 +61,16 @@ function MorePage() {
           <div className="text-base font-bold">{name}</div>
           <div className="text-xs text-muted-foreground">Account details</div>
         </div>
-        <ExternalLink className="size-5 text-primary" />
+        <button onClick={() => toast.info("Account details — coming soon")} aria-label="Open account">
+          <ExternalLink className="size-5 text-primary" />
+        </button>
       </section>
 
       <section className="grid grid-cols-4 gap-3">
-        <QuickTile icon={<QrCode className="size-6" />} label="Web login" />
-        <QuickTile icon={<SettingsIcon className="size-6" />} label="Services" />
+        <QuickTile icon={<QrCode className="size-6" />} label="Web login" onClick={() => toast.info("Web login — coming soon")} />
+        <QuickTile icon={<SettingsIcon className="size-6" />} label="Services" onClick={() => toast.info("Services — coming soon")} />
         <PinManager />
-        <QuickTile icon={<HelpCircle className="size-6" />} label="Support" />
+        <QuickTile icon={<HelpCircle className="size-6" />} label="Support" onClick={() => toast.info("Support — coming soon")} />
       </section>
 
       <section className="rounded-2xl border border-border bg-surface-1 p-4">
@@ -81,21 +83,25 @@ function MorePage() {
         </div>
       </section>
 
-      <section className="flex items-center gap-3 rounded-2xl border border-border bg-surface-1 p-4">
+      <button
+        type="button"
+        onClick={() => toast.info("Referral program — coming soon")}
+        className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface-1 p-4 text-left"
+      >
         <Gift className="size-8 text-primary" />
         <div className="flex-1">
           <div className="text-sm font-semibold">Earn ₹300 + 15% brokerage</div>
           <div className="text-xs text-primary">Refer friends now →</div>
         </div>
+      </button>
+
+      <section className="divide-y divide-border rounded-2xl border border-border bg-surface-1">
+        <MenuItem icon={<MessageSquare className="size-5" />} label="Chat with us" chevron onClick={() => toast.info("Live chat — coming soon")} />
+        <MenuItem icon={<FileText className="size-5" />} label="Submit feedback" external onClick={() => toast.info("Feedback form — coming soon")} />
       </section>
 
       <section className="divide-y divide-border rounded-2xl border border-border bg-surface-1">
-        <MenuItem icon={<MessageSquare className="size-5" />} label="Chat with us" chevron />
-        <MenuItem icon={<FileText className="size-5" />} label="Submit feedback" external />
-      </section>
-
-      <section className="divide-y divide-border rounded-2xl border border-border bg-surface-1">
-        <MenuItem icon={<UserPlus className="size-5" />} label="Add account" />
+        <MenuItem icon={<UserPlus className="size-5" />} label="Add account" onClick={() => toast.info("Multi-account — coming soon")} />
         <button
           onClick={signOut}
           className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm"
