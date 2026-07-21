@@ -29,9 +29,10 @@ const TRENDING = [
 function SearchPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [recentList, setRecentList] = useState(RECENT);
   const recent = useMemo(
-    () => RECENT.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())),
-    [q],
+    () => recentList.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())),
+    [q, recentList],
   );
   const trending = useMemo(
     () => TRENDING.filter((r) => r.name.toLowerCase().includes(q.toLowerCase())),
