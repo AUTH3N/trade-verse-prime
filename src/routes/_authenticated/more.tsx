@@ -1,16 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
+  BarChart3,
   ExternalLink,
   FileText,
   Gift,
+  GraduationCap,
   HelpCircle,
   LogOut,
   MessageSquare,
   QrCode,
   Receipt,
   Settings as SettingsIcon,
+  ShieldAlert,
+  Trophy,
   UserPlus,
   UserRound,
 } from "lucide-react";
@@ -73,6 +77,12 @@ function MorePage() {
         <QuickTile icon={<HelpCircle className="size-6" />} label="Support" onClick={() => toast.info("Support — coming soon")} />
       </section>
 
+      <section className="grid grid-cols-3 gap-3">
+        <NavTile to="/leaderboard" icon={<Trophy className="size-6" />} label="Leaderboard" accent="warn" />
+        <NavTile to="/analytics" icon={<BarChart3 className="size-6" />} label="Performance" accent="bull" />
+        <NavTile to="/learn" icon={<GraduationCap className="size-6" />} label="Learn" accent="primary" />
+      </section>
+
       <section className="rounded-2xl border border-border bg-surface-1 p-4">
         <div className="text-sm font-semibold">Reports</div>
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -80,6 +90,17 @@ function MorePage() {
           <ReportTile icon={<Receipt />} label="Realised P&L" />
           <ReportTile icon={<FileText />} label="Tax P&L" />
           <ReportTile icon={<FileText />} label="View all reports" />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-warn/40 bg-warn/10 p-4">
+        <div className="flex items-start gap-3">
+          <ShieldAlert className="size-5 shrink-0 text-warn" />
+          <div className="text-[11px] leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-foreground">Disclaimer:</span> Vyro is a paper-trading
+            simulator for educational purposes only. All money, prices, and P&L are virtual. Nothing
+            here is investment advice. Real trading involves substantial risk.
+          </div>
         </div>
       </section>
 
@@ -118,6 +139,29 @@ function MorePage() {
         <span className="underline">Brokerage & Charges</span>
       </div>
     </div>
+  );
+}
+
+function NavTile({
+  to,
+  icon,
+  label,
+  accent,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  accent: "warn" | "bull" | "primary";
+}) {
+  const tone = accent === "warn" ? "text-warn" : accent === "bull" ? "text-bull" : "text-primary";
+  return (
+    <Link
+      to={to}
+      className={`flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-surface-1 p-3 ${tone}`}
+    >
+      {icon}
+      <span className="text-[11px] font-medium text-foreground">{label}</span>
+    </Link>
   );
 }
 
