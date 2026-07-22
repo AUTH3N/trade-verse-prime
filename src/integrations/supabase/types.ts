@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      leaderboard_seed: {
+        Row: {
+          avatar_seed: string
+          created_at: string
+          handle: string
+          id: string
+          realized_pnl: number
+          total_trades: number
+          win_rate: number
+        }
+        Insert: {
+          avatar_seed: string
+          created_at?: string
+          handle: string
+          id?: string
+          realized_pnl: number
+          total_trades: number
+          win_rate: number
+        }
+        Update: {
+          avatar_seed?: string
+          created_at?: string
+          handle?: string
+          id?: string
+          realized_pnl?: number
+          total_trades?: number
+          win_rate?: number
+        }
+        Relationships: []
+      }
       otp_codes: {
         Row: {
           attempts: number
