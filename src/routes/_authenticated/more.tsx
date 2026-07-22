@@ -142,6 +142,29 @@ function MorePage() {
   );
 }
 
+function NavTile({
+  to,
+  icon,
+  label,
+  accent,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  accent: "warn" | "bull" | "primary";
+}) {
+  const tone = accent === "warn" ? "text-warn" : accent === "bull" ? "text-bull" : "text-primary";
+  return (
+    <Link
+      to={to}
+      className={`flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-surface-1 p-3 ${tone}`}
+    >
+      {icon}
+      <span className="text-[11px] font-medium text-foreground">{label}</span>
+    </Link>
+  );
+}
+
 function QuickTile({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
     <button onClick={onClick} className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-surface-1 p-3 text-primary">
