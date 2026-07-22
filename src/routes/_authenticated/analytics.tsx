@@ -135,8 +135,8 @@ function Sparkline({ data, up }: { data: number[]; up: boolean }) {
   const range = max - min || 1;
   const step = w / (data.length - 1);
   const points = data.map((v, i) => `${i * step},${h - ((v - min) / range) * h}`).join(" ");
-  const stroke = up ? "hsl(var(--bull))" : "hsl(var(--bear))";
-  const fill = up ? "hsl(var(--bull) / 0.15)" : "hsl(var(--bear) / 0.15)";
+  const stroke = up ? "#26a69a" : "#ef5350";
+  const fill = up ? "rgba(38,166,154,0.18)" : "rgba(239,83,80,0.18)";
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full" preserveAspectRatio="none">
       <polygon points={`0,${h} ${points} ${w},${h}`} fill={fill} />
