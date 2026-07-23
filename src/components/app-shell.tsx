@@ -106,7 +106,7 @@ function TopBar({ initials }: { initials: string }) {
           className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-surface-1 px-3 py-2.5 text-sm text-muted-foreground"
         >
           <Search className="size-4 shrink-0" />
-          <span className="truncate">Search "Mutual Funds"</span>
+          <span className="truncate">Search stocks, F&O, indices</span>
         </Link>
         <Link
           to="/funds"

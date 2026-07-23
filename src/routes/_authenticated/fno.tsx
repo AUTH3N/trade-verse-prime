@@ -4,6 +4,8 @@ import { ChevronDown, Layers, LineChart, TrendingUp, X } from "lucide-react";
 import { formatPct, signedClass } from "@/lib/format";
 import { greekTone, ivHeatStyle, oiBarStyle, tickTone } from "@/lib/heat";
 import { OptionChart } from "@/components/option-chart";
+import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
+
 
 export const Route = createFileRoute("/_authenticated/fno")({
   head: () => ({
@@ -16,12 +18,13 @@ export const Route = createFileRoute("/_authenticated/fno")({
 });
 
 const UNDERLYINGS = [
-  { symbol: "NIFTY", spot: 24812.55, chg: 0.54, step: 50 },
-  { symbol: "BANKNIFTY", spot: 51043.2, chg: -0.43, step: 100 },
-  { symbol: "FINNIFTY", spot: 23110.4, chg: 0.28, step: 50 },
-  { symbol: "MIDCPNIFTY", spot: 12345.6, chg: 0.71, step: 25 },
-  { symbol: "SENSEX", spot: 81344.15, chg: 0.5, step: 100 },
+  { symbol: "NIFTY", spot: 24812.55, chg: 0.54, step: 50, lot: 25 },
+  { symbol: "BANKNIFTY", spot: 51043.2, chg: -0.43, step: 100, lot: 15 },
+  { symbol: "FINNIFTY", spot: 23110.4, chg: 0.28, step: 50, lot: 25 },
+  { symbol: "MIDCPNIFTY", spot: 12345.6, chg: 0.71, step: 25, lot: 50 },
+  { symbol: "SENSEX", spot: 81344.15, chg: 0.5, step: 100, lot: 10 },
 ];
+
 
 const EXPIRIES = ["27 Nov", "04 Dec", "11 Dec", "25 Dec", "29 Jan"];
 
@@ -144,8 +147,9 @@ function FnOPage() {
       </div>
 
       {tab === "chain" ? (
-        <OptionChain rows={rows} atm={atm} />
+        <OptionChain rows={rows} atm={atm} underlying={u.symbol} expiry={EXPIRIES[expIdx]} lotSize={u.lot} />
       ) : (
+
         <StrategyBuilder underlying={u.symbol} />
       )}
     </div>
@@ -197,8 +201,9 @@ function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number
   );
 }
 
-function OptionChain({ rows, atm }: { rows: Row[]; atm: number }) {
+function OptionChain({ rows, atm, underlying, expiry, lotSize }: { rows: Row[]; atm: number; underlying: string; expiry: string; lotSize: number }) {
   const [open, setOpen] = useState<{ strike: number; side: "ce" | "pe"; ltp: number; chg: number } | null>(null);
+  const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
   const maxOi = useMemo(
     () => rows.reduce((m, r) => Math.max(m, r.ceOi, r.peOi), 0),
     [rows],
@@ -272,11 +277,56 @@ function OptionChain({ rows, atm }: { rows: Row[]; atm: number }) {
             bullish={open.chg >= 0}
             height={220}
           />
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() =>
+                setTicket({
+                  target: {
+                    symbol: underlying,
+                    instrument_type: open.side === "ce" ? "CE" : "PE",
+                    strike: open.strike,
+                    expiry,
+                    exchange: "NSE",
+                    price: open.ltp,
+                    lotSize,
+                  },
+                  side: "BUY",
+                })
+              }
+              className="rounded-lg bg-bull py-2 text-sm font-bold text-white"
+            >
+              BUY
+            </button>
+            <button
+              onClick={() =>
+                setTicket({
+                  target: {
+                    symbol: underlying,
+                    instrument_type: open.side === "ce" ? "CE" : "PE",
+                    strike: open.strike,
+                    expiry,
+                    exchange: "NSE",
+                    price: open.ltp,
+                    lotSize,
+                  },
+                  side: "SELL",
+                })
+              }
+              className="rounded-lg bg-bear py-2 text-sm font-bold text-white"
+            >
+              SELL
+            </button>
+          </div>
         </div>
+      )}
+
+      {ticket && (
+        <TradeTicket target={ticket.target} side={ticket.side} onClose={() => setTicket(null)} />
       )}
     </div>
   );
 }
+
 
 function HeaderRow({ side }: { side: "ce" | "pe" }) {
   const cols = side === "ce"

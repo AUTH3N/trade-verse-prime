@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/search")({
   component: SearchPage,
 });
 
-const FILTERS = ["All", "Stocks", "F&O", "Mutual Funds", "Commodities"] as const;
+const FILTERS = ["All", "Stocks", "F&O", "Commodities"] as const;
 
 const RECENT = [
   { name: "BLS International Services Ltd", exch: "NSE", sym: "BLS", saved: true },

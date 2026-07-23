@@ -2,8 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronRight, Eye, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
-import { formatPct, signedClass } from "@/lib/format";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { formatINR, formatPct, signedClass } from "@/lib/format";
 import { OptionChart } from "@/components/option-chart";
+import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
+import { listPositions } from "@/lib/trading.functions";
+import { getWallet } from "@/lib/account.functions";
 
 const soon = (what: string) => toast.info(`${what} — coming soon`);
 
@@ -17,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/home")({
   component: HomePage,
 });
 
-const TABS = ["Stocks", "F&O", "Mutual funds"] as const;
+const TABS = ["Stocks", "F&O"] as const;
 type Tab = (typeof TABS)[number];
 
 const INDICES = [
@@ -34,9 +39,9 @@ const MOST_BOUGHT_STOCKS = [
 ];
 
 const MOST_BOUGHT_OPTIONS = [
-  { symbol: "NIFTY", contract: "24200 CALL", ltp: 78.9, pct: -56.76 },
-  { symbol: "SENSEX", contract: "77800 CALL", ltp: 327.5, pct: -53.09 },
-  { symbol: "BANKNIFTY", contract: "57700 PUT", ltp: 412.15, pct: 28.4 },
+  { symbol: "NIFTY", strike: 24200, side: "CE" as const, ltp: 78.9, pct: -56.76 },
+  { symbol: "SENSEX", strike: 77800, side: "CE" as const, ltp: 327.5, pct: -53.09 },
+  { symbol: "BANKNIFTY", strike: 57700, side: "PE" as const, ltp: 412.15, pct: 28.4 },
 ];
 
 const OPTION_INDEXES = [
@@ -49,7 +54,6 @@ const OPTION_INDEXES = [
 ];
 
 const INVESTMENT_PRODUCTS = [
-  { label: "Mutual Funds", badge: "9 Live NFOs", icon: "💰" },
   { label: "IPO", badge: "5 Live", icon: "📢" },
   { label: "Stock Baskets", icon: "🧺" },
   { label: "Stocks SIPs", icon: "sipit" },
@@ -61,10 +65,11 @@ type ChartTarget = { name: string; value: number; change: number; pct: number };
 function HomePage() {
   const [tab, setTab] = useState<Tab>("Stocks");
   const [chart, setChart] = useState<ChartTarget | null>(null);
+  const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 border-b border-border">
+      <div className="grid grid-cols-2 border-b border-border">
         {TABS.map((t) => (
           <button
             key={t}
@@ -81,11 +86,17 @@ function HomePage() {
         ))}
       </div>
 
-      {tab === "Stocks" && <StocksTab onOpenChart={setChart} />}
-      {tab === "F&O" && <FnoTab onOpenChart={setChart} />}
-      {tab === "Mutual funds" && <MutualFundsTab />}
+      {tab === "Stocks" && <StocksTab onOpenChart={setChart} onTrade={(t) => setTicket({ target: t, side: "BUY" })} />}
+      {tab === "F&O" && <FnoTab onOpenChart={setChart} onTrade={(t) => setTicket({ target: t, side: "BUY" })} />}
 
       {chart && <IndexChartSheet target={chart} onClose={() => setChart(null)} />}
+      {ticket && (
+        <TradeTicket
+          target={ticket.target}
+          side={ticket.side}
+          onClose={() => setTicket(null)}
+        />
+      )}
     </div>
   );
 }
@@ -185,29 +196,73 @@ function IndicesRow({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) 
   );
 }
 
-function StocksTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
+function PortfolioSummary() {
+  const posFn = useServerFn(listPositions);
+  const walletFn = useServerFn(getWallet);
+  const { data: positions } = useQuery({ queryKey: ["positions"], queryFn: () => posFn() });
+  const { data: wallet } = useQuery({ queryKey: ["wallet"], queryFn: () => walletFn() });
+
+  const active = (positions ?? []).filter((p) => p.qty > 0);
+  const invested = active.reduce((s, p) => s + p.avg_price * p.qty, 0);
+  const current = active.reduce((s, p) => s + p.last_price * p.qty, 0);
+  const returns = current - invested;
+  const returnsPct = invested > 0 ? (returns / invested) * 100 : 0;
+  const hasPositions = active.length > 0;
+
+  return (
+    <section>
+      <div className="flex items-center gap-1.5 text-sm font-semibold">
+        Investments summary <Eye className="size-4 text-primary" />
+      </div>
+      <Link
+        to="/portfolio"
+        className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-surface-1 px-4 py-4"
+      >
+        <div>
+          {hasPositions ? (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm text-muted-foreground">Portfolio value</span>
+                <span className="text-xl font-bold tabular-nums">{formatINR(current)}</span>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Total Returns{" "}
+                <span className={`font-semibold ${signedClass(returns)}`}>
+                  {returns >= 0 ? "+" : ""}
+                  {returns.toFixed(2)} ({formatPct(returnsPct)})
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm text-muted-foreground">Available balance</span>
+                <span className="text-xl font-bold tabular-nums">
+                  {formatINR(Number(wallet?.balance ?? 0))}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                No holdings yet — start paper trading to build your portfolio
+              </div>
+            </>
+          )}
+        </div>
+        <ChevronRight className="size-5 text-muted-foreground" />
+      </Link>
+    </section>
+  );
+}
+
+function StocksTab({
+  onOpenChart,
+  onTrade,
+}: {
+  onOpenChart: (t: ChartTarget) => void;
+  onTrade: (t: TradeTarget) => void;
+}) {
   return (
     <div className="space-y-5">
-      <section>
-        <div className="flex items-center gap-1.5 text-sm font-semibold">
-          Investments summary <Eye className="size-4 text-primary" />
-        </div>
-        <Link
-          to="/portfolio"
-          className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-surface-1 px-4 py-4"
-        >
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm text-muted-foreground">Portfolio value</span>
-              <span className="text-xl font-bold tabular-nums">16,432</span>
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              Total Returns <span className="text-bull font-semibold">+180 (+1.11%)</span>
-            </div>
-          </div>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
-      </section>
+      <PortfolioSummary />
 
       <IndicesRow onOpenChart={onOpenChart} />
 
@@ -215,9 +270,13 @@ function StocksTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
         <SectionTitle title="Most bought on Vyro" />
         <div className="mt-3 -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {MOST_BOUGHT_STOCKS.map((s) => (
-            <div
+            <button
               key={s.symbol}
-              className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4"
+              type="button"
+              onClick={() =>
+                onTrade({ symbol: s.symbol, price: s.ltp, exchange: "NSE", instrument_type: "EQ" })
+              }
+              className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4 text-left transition hover:border-primary/60"
             >
               <div
                 className="grid size-8 place-items-center rounded-full text-[9px] font-bold text-white"
@@ -231,14 +290,14 @@ function StocksTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
                 {s.chg >= 0 ? "+" : ""}
                 {s.chg.toFixed(2)} ({formatPct(s.pct)})
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </section>
 
       <section>
         <div className="text-sm font-medium text-muted-foreground">Investment products</div>
-        <div className="mt-3 grid grid-cols-5 gap-2">
+        <div className="mt-3 grid grid-cols-4 gap-2">
           {INVESTMENT_PRODUCTS.map((p) => (
             <button
               key={p.label}
@@ -276,7 +335,18 @@ function StocksTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
   );
 }
 
-function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
+function FnoTab({
+  onOpenChart,
+  onTrade,
+}: {
+  onOpenChart: (t: ChartTarget) => void;
+  onTrade: (t: TradeTarget) => void;
+}) {
+  const posFn = useServerFn(listPositions);
+  const { data: positions } = useQuery({ queryKey: ["positions"], queryFn: () => posFn() });
+  const fno = (positions ?? []).filter((p) => p.instrument_type !== "EQ" && p.qty !== 0);
+  const fnoPnl = fno.reduce((s, p) => s + (p.last_price - p.avg_price) * p.qty, 0);
+
   return (
     <div className="space-y-5">
       <section>
@@ -294,7 +364,9 @@ function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
         >
           <div className="flex items-baseline gap-3">
             <span className="text-sm text-muted-foreground">Profit/Loss</span>
-            <span className="text-lg font-bold tabular-nums text-bear">-2,157</span>
+            <span className={`text-lg font-bold tabular-nums ${signedClass(fnoPnl)}`}>
+              {fno.length === 0 ? "—" : fnoPnl.toFixed(2)}
+            </span>
           </div>
           <ChevronRight className="size-5 text-primary" />
         </Link>
@@ -311,7 +383,6 @@ function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
         </div>
 
         <OptionChainFilters />
-
 
         <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {OPTION_INDEXES.map((o) => {
@@ -340,15 +411,25 @@ function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
         <div className="text-sm font-medium text-muted-foreground">Most bought options</div>
         <div className="mt-3 divide-y divide-border rounded-2xl border border-border bg-surface-1">
           {MOST_BOUGHT_OPTIONS.map((o) => (
-            <Link
-              key={o.symbol + o.contract}
-              to="/fno"
-              className="flex items-center justify-between px-4 py-3.5"
+            <button
+              key={o.symbol + o.strike + o.side}
+              type="button"
+              onClick={() =>
+                onTrade({
+                  symbol: o.symbol,
+                  instrument_type: o.side,
+                  strike: o.strike,
+                  price: o.ltp,
+                  exchange: "NSE",
+                  lotSize: o.symbol === "BANKNIFTY" ? 15 : 25,
+                })
+              }
+              className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-surface-2"
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">{o.symbol}</span>
                 <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                  {o.contract}
+                  {o.strike} {o.side}
                 </span>
               </div>
               <div className="flex items-baseline gap-2">
@@ -357,7 +438,7 @@ function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
                   ({formatPct(o.pct)})
                 </span>
               </div>
-            </Link>
+            </button>
           ))}
         </div>
       </section>
@@ -391,18 +472,6 @@ function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
           </Link>
         </div>
       </section>
-    </div>
-  );
-}
-
-function MutualFundsTab() {
-  return (
-    <div className="rounded-2xl border border-border bg-surface-1 p-8 text-center">
-      <div className="text-3xl">📈</div>
-      <div className="mt-3 text-base font-semibold">Mutual Funds coming soon</div>
-      <div className="mt-1 text-sm text-muted-foreground">
-        Browse curated NFOs, top SIPs, and instant KYC — arriving shortly.
-      </div>
     </div>
   );
 }
