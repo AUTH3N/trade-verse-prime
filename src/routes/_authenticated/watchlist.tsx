@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Bookmark, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { formatPct, signedClass } from "@/lib/format";
+import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
 
 export const Route = createFileRoute("/_authenticated/watchlist")({
   head: () => ({ meta: [{ title: "Watchlist — Vyro" }] }),
@@ -23,6 +24,8 @@ const STOCKS = [
 
 function WatchlistPage() {
   const [active, setActive] = useState<(typeof LISTS)[number]>("My List 1");
+  const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
+
   return (
     <div className="-mt-3 space-y-3">
       <Link
@@ -58,11 +61,7 @@ function WatchlistPage() {
 
       <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1">
         {STOCKS.map((s) => (
-          <button
-            key={s.sym}
-            onClick={() => toast.info(`${s.sym} detail — coming soon`)}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-2"
-          >
+          <div key={s.sym} className="flex items-center gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold">{s.sym}</div>
               <div className="text-[11px] text-muted-foreground">{s.exch} · EQ</div>
@@ -76,19 +75,44 @@ function WatchlistPage() {
                 {s.chg.toFixed(2)} ({formatPct(s.pct)})
               </div>
             </div>
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                toast.success(`${s.sym} bookmarked`);
-              }}
-              className="text-primary"
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() =>
+                  setTicket({
+                    target: { symbol: s.sym, price: s.ltp, exchange: s.exch, instrument_type: "EQ" },
+                    side: "BUY",
+                  })
+                }
+                className="rounded-md bg-bull px-2.5 py-1 text-[10px] font-bold text-white"
+              >
+                BUY
+              </button>
+              <button
+                onClick={() =>
+                  setTicket({
+                    target: { symbol: s.sym, price: s.ltp, exchange: s.exch, instrument_type: "EQ" },
+                    side: "SELL",
+                  })
+                }
+                className="rounded-md bg-bear px-2.5 py-1 text-[10px] font-bold text-white"
+              >
+                SELL
+              </button>
+            </div>
+            <button
+              onClick={() => toast.success(`${s.sym} bookmarked`)}
+              className="ml-1 text-primary"
               aria-label="Bookmark"
             >
               <Bookmark className="size-4 fill-current" />
-            </span>
-          </button>
+            </button>
+          </div>
         ))}
       </div>
+
+      {ticket && (
+        <TradeTicket target={ticket.target} side={ticket.side} onClose={() => setTicket(null)} />
+      )}
     </div>
   );
 }
