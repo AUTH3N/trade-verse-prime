@@ -4,6 +4,8 @@ import { ChevronDown, Layers, LineChart, TrendingUp, X } from "lucide-react";
 import { formatPct, signedClass } from "@/lib/format";
 import { greekTone, ivHeatStyle, oiBarStyle, tickTone } from "@/lib/heat";
 import { OptionChart } from "@/components/option-chart";
+import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
+
 
 export const Route = createFileRoute("/_authenticated/fno")({
   head: () => ({
@@ -197,8 +199,9 @@ function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number
   );
 }
 
-function OptionChain({ rows, atm }: { rows: Row[]; atm: number }) {
+function OptionChain({ rows, atm, underlying, expiry, lotSize }: { rows: Row[]; atm: number; underlying: string; expiry: string; lotSize: number }) {
   const [open, setOpen] = useState<{ strike: number; side: "ce" | "pe"; ltp: number; chg: number } | null>(null);
+  const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
   const maxOi = useMemo(
     () => rows.reduce((m, r) => Math.max(m, r.ceOi, r.peOi), 0),
     [rows],
@@ -272,11 +275,56 @@ function OptionChain({ rows, atm }: { rows: Row[]; atm: number }) {
             bullish={open.chg >= 0}
             height={220}
           />
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() =>
+                setTicket({
+                  target: {
+                    symbol: underlying,
+                    instrument_type: open.side === "ce" ? "CE" : "PE",
+                    strike: open.strike,
+                    expiry,
+                    exchange: "NSE",
+                    price: open.ltp,
+                    lotSize,
+                  },
+                  side: "BUY",
+                })
+              }
+              className="rounded-lg bg-bull py-2 text-sm font-bold text-white"
+            >
+              BUY
+            </button>
+            <button
+              onClick={() =>
+                setTicket({
+                  target: {
+                    symbol: underlying,
+                    instrument_type: open.side === "ce" ? "CE" : "PE",
+                    strike: open.strike,
+                    expiry,
+                    exchange: "NSE",
+                    price: open.ltp,
+                    lotSize,
+                  },
+                  side: "SELL",
+                })
+              }
+              className="rounded-lg bg-bear py-2 text-sm font-bold text-white"
+            >
+              SELL
+            </button>
+          </div>
         </div>
+      )}
+
+      {ticket && (
+        <TradeTicket target={ticket.target} side={ticket.side} onClose={() => setTicket(null)} />
       )}
     </div>
   );
 }
+
 
 function HeaderRow({ side }: { side: "ce" | "pe" }) {
   const cols = side === "ce"
