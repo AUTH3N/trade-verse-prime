@@ -18,12 +18,13 @@ export const Route = createFileRoute("/_authenticated/fno")({
 });
 
 const UNDERLYINGS = [
-  { symbol: "NIFTY", spot: 24812.55, chg: 0.54, step: 50 },
-  { symbol: "BANKNIFTY", spot: 51043.2, chg: -0.43, step: 100 },
-  { symbol: "FINNIFTY", spot: 23110.4, chg: 0.28, step: 50 },
-  { symbol: "MIDCPNIFTY", spot: 12345.6, chg: 0.71, step: 25 },
-  { symbol: "SENSEX", spot: 81344.15, chg: 0.5, step: 100 },
+  { symbol: "NIFTY", spot: 24812.55, chg: 0.54, step: 50, lot: 25 },
+  { symbol: "BANKNIFTY", spot: 51043.2, chg: -0.43, step: 100, lot: 15 },
+  { symbol: "FINNIFTY", spot: 23110.4, chg: 0.28, step: 50, lot: 25 },
+  { symbol: "MIDCPNIFTY", spot: 12345.6, chg: 0.71, step: 25, lot: 50 },
+  { symbol: "SENSEX", spot: 81344.15, chg: 0.5, step: 100, lot: 10 },
 ];
+
 
 const EXPIRIES = ["27 Nov", "04 Dec", "11 Dec", "25 Dec", "29 Jan"];
 
@@ -146,8 +147,9 @@ function FnOPage() {
       </div>
 
       {tab === "chain" ? (
-        <OptionChain rows={rows} atm={atm} />
+        <OptionChain rows={rows} atm={atm} underlying={u.symbol} expiry={EXPIRIES[expIdx]} lotSize={u.lot} />
       ) : (
+
         <StrategyBuilder underlying={u.symbol} />
       )}
     </div>
