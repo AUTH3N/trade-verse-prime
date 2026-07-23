@@ -151,7 +151,7 @@ function SectionTitle({ title, right }: { title: string; right?: React.ReactNode
   );
 }
 
-function IndicesRow() {
+function IndicesRow({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
   return (
     <section>
       <SectionTitle
@@ -164,9 +164,11 @@ function IndicesRow() {
       />
       <div className="mt-3 -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {INDICES.map((i) => (
-          <div
+          <button
             key={i.name}
-            className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4"
+            type="button"
+            onClick={() => onOpenChart(i)}
+            className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4 text-left transition hover:border-primary/60"
           >
             <div className="text-[11px] font-semibold tracking-wide">{i.name}</div>
             <div className="mt-1 text-lg font-semibold tabular-nums">
@@ -176,14 +178,14 @@ function IndicesRow() {
               {i.change >= 0 ? "+" : ""}
               {i.change.toFixed(2)} ({formatPct(i.pct)})
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </section>
   );
 }
 
-function StocksTab() {
+function StocksTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
   return (
     <div className="space-y-5">
       <section>
@@ -207,7 +209,7 @@ function StocksTab() {
         </Link>
       </section>
 
-      <IndicesRow />
+      <IndicesRow onOpenChart={onOpenChart} />
 
       <section>
         <SectionTitle title="Most bought on Vyro" />
@@ -274,7 +276,7 @@ function StocksTab() {
   );
 }
 
-function FnoTab() {
+function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
   return (
     <div className="space-y-5">
       <section>
@@ -298,7 +300,7 @@ function FnoTab() {
         </Link>
       </section>
 
-      <IndicesRow />
+      <IndicesRow onOpenChart={onOpenChart} />
 
       <section>
         <div className="flex items-center justify-between">
@@ -312,20 +314,25 @@ function FnoTab() {
 
 
         <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {OPTION_INDEXES.map((o) => (
-            <Link
-              key={o.symbol}
-              to="/fno"
-              className="flex min-w-[64px] flex-col items-center gap-1.5"
-            >
-              <div
-                className={`grid size-14 place-items-center rounded-full bg-gradient-to-br text-[9px] font-black text-white ${o.color}`}
+          {OPTION_INDEXES.map((o) => {
+            const match = INDICES.find((i) => i.name === o.symbol);
+            const target: ChartTarget = match ?? { name: o.symbol, value: 20000, change: 0, pct: 0 };
+            return (
+              <button
+                key={o.symbol}
+                type="button"
+                onClick={() => onOpenChart(target)}
+                className="flex min-w-[64px] flex-col items-center gap-1.5"
               >
-                {o.label}
-              </div>
-              <div className="text-[10px] font-medium">{o.symbol}</div>
-            </Link>
-          ))}
+                <div
+                  className={`grid size-14 place-items-center rounded-full bg-gradient-to-br text-[9px] font-black text-white ${o.color}`}
+                >
+                  {o.label}
+                </div>
+                <div className="text-[10px] font-medium">{o.symbol}</div>
+              </button>
+            );
+          })}
         </div>
       </section>
 
