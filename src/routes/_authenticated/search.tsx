@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Bookmark, Clock, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft, Bookmark, Clock, Radio, TrendingUp } from "lucide-react";
+import { getLiveQuote } from "@/lib/quotes.functions";
+import { formatPct, signedClass } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/search")({
   head: () => ({ meta: [{ title: "Search — Vyro" }] }),
@@ -70,6 +74,8 @@ function SearchPage() {
           ))}
         </div>
       </div>
+      {q.trim().length >= 2 && <LiveQuoteCard symbol={q.trim()} />}
+
 
       <div className="pt-4">
         <div className="flex items-center justify-between">
@@ -136,6 +142,51 @@ function Row({
       >
         <Bookmark className={`size-5 ${isSaved ? "fill-current" : ""}`} />
       </button>
+    </div>
+  );
+}
+
+function LiveQuoteCard({ symbol }: { symbol: string }) {
+  const fn = useServerFn(getLiveQuote);
+  const { data, isFetching } = useQuery({
+    queryKey: ["live-quote", symbol.toUpperCase()],
+    queryFn: () => fn({ data: { symbol } }),
+    staleTime: 30_000,
+  });
+
+  return (
+    <div className="mt-4 rounded-2xl border border-primary/40 bg-surface-1 p-4">
+      <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+        <Radio className="size-3.5" />
+        Live quote · {symbol.toUpperCase()}
+        {data?.source === "mock" && (
+          <span className="ml-auto rounded bg-warn/20 px-1.5 py-0.5 text-[9px] font-bold text-warn">
+            MOCK
+          </span>
+        )}
+      </div>
+      {!data ? (
+        <div className="mt-2 text-xs text-muted-foreground">
+          {isFetching ? "Fetching…" : "Type a ticker (e.g. AAPL, TSLA, RELIANCE.BSE)"}
+        </div>
+      ) : (
+        <div className="mt-2 flex items-baseline justify-between">
+          <div>
+            <div className="text-xl font-bold tabular-nums">
+              {data.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </div>
+            <div className={`text-xs font-semibold tabular-nums ${signedClass(data.change)}`}>
+              {data.change >= 0 ? "+" : ""}
+              {data.change.toFixed(2)} ({formatPct(data.changePct)})
+            </div>
+          </div>
+          <div className="text-right text-[10px] text-muted-foreground">
+            <div>H {data.high.toFixed(2)}</div>
+            <div>L {data.low.toFixed(2)}</div>
+            <div>Vol {data.volume.toLocaleString("en-IN")}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
