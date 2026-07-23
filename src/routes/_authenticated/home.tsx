@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronRight, Eye, TrendingUp } from "lucide-react";
+import { ChevronRight, Eye, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatPct, signedClass } from "@/lib/format";
+import { OptionChart } from "@/components/option-chart";
 
 const soon = (what: string) => toast.info(`${what} — coming soon`);
 
@@ -55,8 +56,11 @@ const INVESTMENT_PRODUCTS = [
   { label: "ETF", icon: "↗" },
 ];
 
+type ChartTarget = { name: string; value: number; change: number; pct: number };
+
 function HomePage() {
   const [tab, setTab] = useState<Tab>("Stocks");
+  const [chart, setChart] = useState<ChartTarget | null>(null);
 
   return (
     <div className="space-y-4">
@@ -77,9 +81,63 @@ function HomePage() {
         ))}
       </div>
 
-      {tab === "Stocks" && <StocksTab />}
-      {tab === "F&O" && <FnoTab />}
+      {tab === "Stocks" && <StocksTab onOpenChart={setChart} />}
+      {tab === "F&O" && <FnoTab onOpenChart={setChart} />}
       {tab === "Mutual funds" && <MutualFundsTab />}
+
+      {chart && <IndexChartSheet target={chart} onClose={() => setChart(null)} />}
+    </div>
+  );
+}
+
+function IndexChartSheet({ target, onClose }: { target: ChartTarget; onClose: () => void }) {
+  const bullish = target.change >= 0;
+  const seed = [...target.name].reduce((s, c) => s + c.charCodeAt(0), 0);
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-2xl rounded-t-3xl border border-border bg-surface-1 p-4 sm:rounded-3xl">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-xs font-semibold tracking-wide text-muted-foreground">
+              {target.name} · Intraday
+            </div>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-2xl font-bold tabular-nums">
+                {target.value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+              <span className={`text-sm font-semibold tabular-nums ${signedClass(target.change)}`}>
+                {target.change >= 0 ? "+" : ""}
+                {target.change.toFixed(2)} ({formatPct(target.pct)})
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid size-9 place-items-center rounded-full bg-background text-muted-foreground"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-background">
+          <OptionChart seed={seed} base={target.value} height={260} bullish={bullish} />
+        </div>
+        <div className="mt-3 flex gap-2">
+          <Link
+            to="/fno"
+            onClick={onClose}
+            className="flex-1 rounded-xl bg-primary py-2.5 text-center text-sm font-semibold text-primary-foreground"
+          >
+            Open option chain
+          </Link>
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -93,7 +151,7 @@ function SectionTitle({ title, right }: { title: string; right?: React.ReactNode
   );
 }
 
-function IndicesRow() {
+function IndicesRow({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
   return (
     <section>
       <SectionTitle
@@ -106,9 +164,11 @@ function IndicesRow() {
       />
       <div className="mt-3 -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {INDICES.map((i) => (
-          <div
+          <button
             key={i.name}
-            className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4"
+            type="button"
+            onClick={() => onOpenChart(i)}
+            className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4 text-left transition hover:border-primary/60"
           >
             <div className="text-[11px] font-semibold tracking-wide">{i.name}</div>
             <div className="mt-1 text-lg font-semibold tabular-nums">
@@ -118,14 +178,14 @@ function IndicesRow() {
               {i.change >= 0 ? "+" : ""}
               {i.change.toFixed(2)} ({formatPct(i.pct)})
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </section>
   );
 }
 
-function StocksTab() {
+function StocksTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
   return (
     <div className="space-y-5">
       <section>
@@ -149,7 +209,7 @@ function StocksTab() {
         </Link>
       </section>
 
-      <IndicesRow />
+      <IndicesRow onOpenChart={onOpenChart} />
 
       <section>
         <SectionTitle title="Most bought on Vyro" />
@@ -216,7 +276,7 @@ function StocksTab() {
   );
 }
 
-function FnoTab() {
+function FnoTab({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
   return (
     <div className="space-y-5">
       <section>
@@ -240,7 +300,7 @@ function FnoTab() {
         </Link>
       </section>
 
-      <IndicesRow />
+      <IndicesRow onOpenChart={onOpenChart} />
 
       <section>
         <div className="flex items-center justify-between">
@@ -254,20 +314,25 @@ function FnoTab() {
 
 
         <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {OPTION_INDEXES.map((o) => (
-            <Link
-              key={o.symbol}
-              to="/fno"
-              className="flex min-w-[64px] flex-col items-center gap-1.5"
-            >
-              <div
-                className={`grid size-14 place-items-center rounded-full bg-gradient-to-br text-[9px] font-black text-white ${o.color}`}
+          {OPTION_INDEXES.map((o) => {
+            const match = INDICES.find((i) => i.name === o.symbol);
+            const target: ChartTarget = match ?? { name: o.symbol, value: 20000, change: 0, pct: 0 };
+            return (
+              <button
+                key={o.symbol}
+                type="button"
+                onClick={() => onOpenChart(target)}
+                className="flex min-w-[64px] flex-col items-center gap-1.5"
               >
-                {o.label}
-              </div>
-              <div className="text-[10px] font-medium">{o.symbol}</div>
-            </Link>
-          ))}
+                <div
+                  className={`grid size-14 place-items-center rounded-full bg-gradient-to-br text-[9px] font-black text-white ${o.color}`}
+                >
+                  {o.label}
+                </div>
+                <div className="text-[10px] font-medium">{o.symbol}</div>
+              </button>
+            );
+          })}
         </div>
       </section>
 
