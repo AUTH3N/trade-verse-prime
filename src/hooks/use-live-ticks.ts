@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getMarketStatus } from "@/lib/market-hours";
 
 // Deterministic per-symbol seed
 function hash(str: string): number {
@@ -12,8 +13,8 @@ function hash(str: string): number {
 
 /**
  * Returns a live oscillating multiplier per symbol key.
- * Refreshes every `intervalMs` (default 1500ms).
- * Amplitude is +/- ~1.2% for equity, ~4% for options.
+ * When the Indian market is closed, ticks FREEZE at the last-close snapshot
+ * so P&L doesn't drift outside trading hours (matches real broker behavior).
  */
 export function useLiveTicks(keys: string[], intervalMs = 500) {
   const [now, setNow] = useState(() => Date.now());
@@ -22,8 +23,11 @@ export function useLiveTicks(keys: string[], intervalMs = 500) {
     return () => clearInterval(id);
   }, [intervalMs]);
 
+  const status = getMarketStatus(new Date(now));
+  // Freeze the time axis when the market is closed.
+  const t = (status.open ? now : status.lastCloseMs) / 1000;
+
   const ticks: Record<string, number> = {};
-  const t = now / 1000;
   for (const key of keys) {
     const seed = hash(key);
     const phase = (seed % 1000) / 1000;

@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getMarketStatus } from "./market-hours";
+
 
 export type LiveQuote = {
   symbol: string;
@@ -12,7 +14,8 @@ export type LiveQuote = {
   prevClose: number;
   volume: number;
   latestTradingDay: string;
-  source: "alphavantage" | "mock";
+  source: "alphavantage" | "mock" | "last_close";
+  marketOpen: boolean;
 };
 
 /**
@@ -61,6 +64,7 @@ export const getLiveQuote = createServerFn({ method: "GET" })
         volume: Number(q["06. volume"]),
         latestTradingDay: q["07. latest trading day"] ?? "",
         source: "alphavantage",
+        marketOpen: getMarketStatus().open,
       };
     } catch (err) {
       console.error("Alpha Vantage fetch failed:", err);
@@ -87,5 +91,6 @@ function mockQuote(symbol: string, source: LiveQuote["source"]): LiveQuote {
     volume: Math.round(rand(6) * 5_000_000),
     latestTradingDay: new Date().toISOString().slice(0, 10),
     source,
+    marketOpen: getMarketStatus().open,
   };
 }
