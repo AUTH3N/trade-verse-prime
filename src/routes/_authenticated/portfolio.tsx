@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { formatINR, formatPct, signedClass } from "@/lib/format";
 import { listPositions, type Position } from "@/lib/trading.functions";
 import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
+import { useLiveTicks } from "@/hooks/use-live-ticks";
 
 const soon = (what: string) => toast.info(`${what} — coming soon`);
 
@@ -20,13 +21,26 @@ const HEADER_INDICES = [
   { name: "SENSEX", value: 77594.86, change: -556.59, pct: -0.71 },
 ];
 
+function keyFor(p: Position) {
+  return `${p.symbol}|${p.instrument_type}|${p.strike ?? ""}|${p.expiry ?? ""}`;
+}
+
 function PortfolioPage() {
   const [tab, setTab] = useState<"Investments" | "Positions">("Investments");
   const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
 
   const posFn = useServerFn(listPositions);
-  const { data: positions } = useQuery({ queryKey: ["positions"], queryFn: () => posFn() });
-  const all = positions ?? [];
+  const { data: rawPositions } = useQuery({
+    queryKey: ["positions"],
+    queryFn: () => posFn(),
+    refetchInterval: 15000,
+  });
+  const base = rawPositions ?? [];
+  const ticks = useLiveTicks(base.map(keyFor));
+  const all: Position[] = base.map((p) => ({
+    ...p,
+    last_price: +(p.avg_price * (ticks[keyFor(p)] ?? 1)).toFixed(2),
+  }));
   const equity = all.filter((p) => p.instrument_type === "EQ" && p.qty > 0);
   const derivatives = all.filter((p) => p.instrument_type !== "EQ" && p.qty !== 0);
 
