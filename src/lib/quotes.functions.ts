@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getMarketStatus } from "./market-hours";
+
 
 export type LiveQuote = {
   symbol: string;
@@ -12,7 +14,8 @@ export type LiveQuote = {
   prevClose: number;
   volume: number;
   latestTradingDay: string;
-  source: "alphavantage" | "mock";
+  source: "alphavantage" | "mock" | "last_close";
+  marketOpen: boolean;
 };
 
 /**
