@@ -91,5 +91,6 @@ function mockQuote(symbol: string, source: LiveQuote["source"]): LiveQuote {
     volume: Math.round(rand(6) * 5_000_000),
     latestTradingDay: new Date().toISOString().slice(0, 10),
     source,
+    marketOpen: getMarketStatus().open,
   };
 }
