@@ -38,14 +38,14 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --color-bull: var(--bull);
-  --color-bull-foreground: var(--bull-foreground);
-  --color-bear: var(--bear);
-  --color-bear-foreground: var(--bear-foreground);
-  --color-warn: var(--warn);
-  --color-warn-foreground: var(--warn-foreground);
-  --color-surface-1: var(--surface-1);
-  --color-surface-2: var(--surface-2);
+  --color-bull: hsl(var(--bull));
+  --color-bull-foreground: hsl(var(--bull-foreground));
+  --color-bear: hsl(var(--bear));
+  --color-bear-foreground: hsl(var(--bear-foreground));
+  --color-warn: hsl(var(--warn));
+  --color-warn-foreground: hsl(var(--warn-foreground));
+  --color-surface-1: hsl(var(--surface-1));
+  --color-surface-2: hsl(var(--surface-2));
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -177,9 +177,6 @@
   }
 }
 
-@utility text-bull { color: hsl(var(--color-bull)); }
-@utility text-bear { color: hsl(var(--color-bear)); }
-@utility bg-bull { background-color: hsl(var(--color-bull)); }
-@utility bg-bear { background-color: hsl(var(--color-bear)); }
-@utility bg-surface-1 { background-color: hsl(var(--color-surface-1)); }
-@utility bg-surface-2 { background-color: hsl(var(--color-surface-2)); }
+/* bull/bear/surface utilities are auto-generated from @theme --color-* tokens
+   (which now correctly wrap in hsl()), enabling opacity modifiers like
+   bg-bull/15 used by BUY/SELL chips. */
