@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { hasUserPin, verifyUserPin } from "@/lib/pin.functions";
 import { getProfile } from "@/lib/account.functions";
 import { toast } from "sonner";
+import { MarketStatusBanner } from "@/components/market-status-banner";
 
 const TABS = [
   { to: "/home", label: "Home", icon: Home },
@@ -70,7 +71,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {!hideTopBar && <TopBar initials={initials} />}
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-3">{children}</main>
+      <main className="mx-auto max-w-3xl px-4 pb-24 pt-3">
+        {!hideTopBar && <MarketStatusBanner />}
+        {children}
+      </main>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface-1/95 backdrop-blur">
         <div
           className="mx-auto grid max-w-3xl"
