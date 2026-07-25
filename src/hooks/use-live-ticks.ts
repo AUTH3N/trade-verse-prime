@@ -15,7 +15,7 @@ function hash(str: string): number {
  * Refreshes every `intervalMs` (default 1500ms).
  * Amplitude is +/- ~1.2% for equity, ~4% for options.
  */
-export function useLiveTicks(keys: string[], intervalMs = 1500) {
+export function useLiveTicks(keys: string[], intervalMs = 500) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), intervalMs);
