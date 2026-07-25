@@ -64,6 +64,7 @@ export const getLiveQuote = createServerFn({ method: "GET" })
         volume: Number(q["06. volume"]),
         latestTradingDay: q["07. latest trading day"] ?? "",
         source: "alphavantage",
+        marketOpen: getMarketStatus().open,
       };
     } catch (err) {
       console.error("Alpha Vantage fetch failed:", err);
