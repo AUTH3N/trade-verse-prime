@@ -54,19 +54,23 @@ function PortfolioPage() {
       <section className="rounded-2xl border border-border bg-surface-1 p-3">
         <div className="flex items-center justify-between">
           <div className="flex gap-6">
-            {HEADER_INDICES.map((i) => (
-              <div key={i.name}>
-                <div className="text-[11px] font-semibold">{i.name}</div>
-                <div className="mt-0.5 flex items-baseline gap-1.5">
-                  <span className="text-sm font-semibold tabular-nums">
-                    {i.value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className={`text-[10px] tabular-nums ${signedClass(i.change)}`}>
-                    {i.change.toFixed(2)} ({formatPct(i.pct)})
-                  </span>
+            {HEADER_SYMBOLS.map((name) => {
+              const q = headerQuotes[name];
+              return (
+                <div key={name}>
+                  <div className="text-[11px] font-semibold">{name}</div>
+                  <div className="mt-0.5 flex items-baseline gap-1.5">
+                    <span className="text-sm font-semibold tabular-nums">
+                      {(q?.price ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className={`text-[10px] tabular-nums ${signedClass(q?.change ?? 0)}`}>
+                      {(q?.change ?? 0).toFixed(2)} ({formatPct(q?.changePct ?? 0)})
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
           </div>
           <button onClick={() => soon("Indices detail")} className="text-primary" aria-label="Expand indices">
             <ChevronDown className="size-5" />
