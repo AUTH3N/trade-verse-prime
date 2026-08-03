@@ -5,6 +5,11 @@ import { formatPct, signedClass } from "@/lib/format";
 import { greekTone, ivHeatStyle, oiBarStyle, tickTone } from "@/lib/heat";
 import { OptionChart } from "@/components/option-chart";
 import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
+import { useLiveQuotes, useMarketClock } from "@/hooks/use-live-ticks";
+import { baseIvFor } from "@/lib/market-engine";
+import { blackScholes, impliedVol } from "@/lib/option-pricing";
+import { expiryCountdown, upcomingExpiries, yearsToExpiry, type ExpiryInfo } from "@/lib/expiry";
+
 
 
 export const Route = createFileRoute("/_authenticated/fno")({
