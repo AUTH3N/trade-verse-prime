@@ -5,6 +5,11 @@ import { formatPct, signedClass } from "@/lib/format";
 import { greekTone, ivHeatStyle, oiBarStyle, tickTone } from "@/lib/heat";
 import { OptionChart } from "@/components/option-chart";
 import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
+import { useLiveQuotes, useMarketClock } from "@/hooks/use-live-ticks";
+import { baseIvFor } from "@/lib/market-engine";
+import { blackScholes, impliedVol } from "@/lib/option-pricing";
+import { expiryCountdown, upcomingExpiries, yearsToExpiry, type ExpiryInfo } from "@/lib/expiry";
+
 
 
 export const Route = createFileRoute("/_authenticated/fno")({
@@ -18,15 +23,12 @@ export const Route = createFileRoute("/_authenticated/fno")({
 });
 
 const UNDERLYINGS = [
-  { symbol: "NIFTY", spot: 24812.55, chg: 0.54, step: 50, lot: 25 },
-  { symbol: "BANKNIFTY", spot: 51043.2, chg: -0.43, step: 100, lot: 15 },
-  { symbol: "FINNIFTY", spot: 23110.4, chg: 0.28, step: 50, lot: 25 },
-  { symbol: "MIDCPNIFTY", spot: 12345.6, chg: 0.71, step: 25, lot: 50 },
-  { symbol: "SENSEX", spot: 81344.15, chg: 0.5, step: 100, lot: 10 },
+  { symbol: "NIFTY", step: 50, lot: 25 },
+  { symbol: "BANKNIFTY", step: 100, lot: 15 },
+  { symbol: "FINNIFTY", step: 50, lot: 25 },
+  { symbol: "MIDCPNIFTY", step: 25, lot: 50 },
+  { symbol: "SENSEX", step: 100, lot: 10 },
 ];
-
-
-const EXPIRIES = ["27 Nov", "04 Dec", "11 Dec", "25 Dec", "29 Jan"];
 
 type Row = {
   strike: number;
@@ -35,7 +37,7 @@ type Row = {
   itmCE: boolean; itmPE: boolean;
 };
 
-// Deterministic pseudo-random for stable UI mock data.
+// Deterministic pseudo-random for stable OI/volume depth.
 function seeded(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -44,30 +46,50 @@ function seeded(seed: number) {
   };
 }
 
-function buildChain(spot: number, step: number, seed: number): Row[] {
+/**
+ * Live option chain: every premium and Greek is Black–Scholes priced off the
+ * live spot and the selected expiry, so the chain decays as expiry approaches
+ * and reprices tick-by-tick with the underlying.
+ */
+function buildChain(
+  symbol: string,
+  spot: number,
+  prevClose: number,
+  step: number,
+  years: number,
+  seed: number,
+): Row[] {
   const rand = seeded(seed);
   const atm = Math.round(spot / step) * step;
   const strikes = Array.from({ length: 13 }, (_, i) => atm + (i - 6) * step);
+  const baseIv = baseIvFor(symbol);
+  const prevYears = Math.max(years + 1 / 365, 0);
+
   return strikes.map((k) => {
-    const moneyCE = Math.max(0, spot - k);
-    const movePE = Math.max(0, k - spot);
-    const timeVal = step * (1 + rand() * 2);
-    const ceLtp = +(moneyCE + timeVal).toFixed(2);
-    const peLtp = +(movePE + timeVal).toFixed(2);
+    const ivCe = impliedVol(spot, k, Math.max(years, 1e-6), baseIv);
+    const ivPe = impliedVol(spot, k, Math.max(years, 1e-6), baseIv * 1.04); // put skew
+    const ce = blackScholes("CE", spot, k, ivCe, years);
+    const pe = blackScholes("PE", spot, k, ivPe, years);
+    const cePrev = blackScholes("CE", prevClose, k, ivCe, prevYears);
+    const pePrev = blackScholes("PE", prevClose, k, ivPe, prevYears);
+    // Open interest clusters around round strikes and thins out in the wings.
+    const distance = Math.abs(k - atm) / step;
+    const cluster = Math.exp(-(distance * distance) / 18) * (0.6 + rand() * 0.8);
+
     return {
       strike: k,
-      ceLtp,
-      ceChg: +((rand() - 0.5) * 8).toFixed(2),
-      ceIv: +(12 + rand() * 10).toFixed(2),
-      ceOi: Math.round(20000 + rand() * 900000),
-      ceVol: Math.round(1000 + rand() * 80000),
-      ceDelta: +Math.min(0.98, Math.max(0.02, 0.5 + (spot - k) / (step * 20))).toFixed(2),
-      peLtp,
-      peChg: +((rand() - 0.5) * 8).toFixed(2),
-      peIv: +(12 + rand() * 10).toFixed(2),
-      peOi: Math.round(20000 + rand() * 900000),
-      peVol: Math.round(1000 + rand() * 80000),
-      peDelta: +(-Math.min(0.98, Math.max(0.02, 0.5 - (spot - k) / (step * 20)))).toFixed(2),
+      ceLtp: ce.price,
+      ceChg: +(ce.price - cePrev.price).toFixed(2),
+      ceIv: +(ivCe * 100).toFixed(2),
+      ceOi: Math.round(1_400_000 * cluster * (k >= atm ? 1.15 : 0.8)),
+      ceVol: Math.round(120_000 * cluster * (0.5 + rand())),
+      ceDelta: +ce.delta.toFixed(2),
+      peLtp: pe.price,
+      peChg: +(pe.price - pePrev.price).toFixed(2),
+      peIv: +(ivPe * 100).toFixed(2),
+      peOi: Math.round(1_400_000 * cluster * (k <= atm ? 1.15 : 0.8)),
+      peVol: Math.round(120_000 * cluster * (0.5 + rand())),
+      peDelta: +pe.delta.toFixed(2),
       itmCE: k < spot,
       itmPE: k > spot,
     };
@@ -91,8 +113,19 @@ function FnOPage() {
   const [tab, setTab] = useState<"chain" | "strategy">("chain");
 
   const u = UNDERLYINGS[uIdx];
-  const rows = useMemo(() => buildChain(u.spot, u.step, u.symbol.length * 31 + expIdx), [u, expIdx]);
-  const atm = Math.round(u.spot / u.step) * u.step;
+  const { now, live, status } = useMarketClock(1000);
+  const expiries = useMemo(() => upcomingExpiries(now), [Math.floor(now / 3_600_000)]);
+  const expiry = expiries[Math.min(expIdx, expiries.length - 1)];
+  const quotes = useLiveQuotes([u.symbol]);
+  const q = quotes[u.symbol];
+  const spot = q?.price ?? 0;
+  const years = expiry ? yearsToExpiry(expiry.value, now) : 0;
+
+  const rows = useMemo(
+    () => (spot > 0 ? buildChain(u.symbol, spot, q.prevClose, u.step, years, u.symbol.length * 31 + expIdx) : []),
+    [u.symbol, u.step, spot, q?.prevClose, years, expIdx],
+  );
+  const atm = Math.round(spot / u.step) * u.step;
 
   return (
     <div className="space-y-4">
@@ -123,18 +156,40 @@ function FnOPage() {
       <div className="rounded-2xl border border-border bg-gradient-to-br from-surface-1 to-surface-2 p-4">
         <div className="flex items-end justify-between">
           <div>
-            <div className="text-xs text-muted-foreground">{u.symbol} · SPOT</div>
-            <div className="mt-0.5 text-2xl font-semibold tabular-nums">
-              {u.spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{u.symbol} · SPOT</span>
+              <span
+                className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                  live ? "bg-bull/15 text-bull" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <span className={`size-1.5 rounded-full ${live ? "bg-bull" : "bg-muted-foreground"}`} />
+                {live ? "LIVE" : "CLOSED"}
+              </span>
             </div>
-            <div className={`text-xs font-medium tabular-nums ${signedClass(u.chg)}`}>
-              {u.chg >= 0 ? "+" : ""}
-              {formatPct(u.chg)}
+            <div className="mt-0.5 text-2xl font-semibold tabular-nums">
+              {spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </div>
+            <div className={`text-xs font-medium tabular-nums ${signedClass(q?.change ?? 0)}`}>
+              {(q?.change ?? 0) >= 0 ? "+" : ""}
+              {(q?.change ?? 0).toFixed(2)} ({formatPct(q?.changePct ?? 0)})
+            </div>
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              O {q?.open.toFixed(2)} · H {q?.high.toFixed(2)} · L {q?.low.toFixed(2)} · {status.label}
             </div>
           </div>
-          <ExpiryPicker value={expIdx} onChange={setExpIdx} />
+          <div className="text-right">
+            <ExpiryPicker value={expIdx} onChange={setExpIdx} expiries={expiries} />
+            {expiry && (
+              <div className="mt-1.5 text-[10px] text-muted-foreground">
+                {expiryCountdown(expiry.value, now)}
+                {expiry.monthly ? " · Monthly" : " · Weekly"}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
 
       {/* Segmented control */}
       <div className="inline-flex rounded-xl border border-border bg-surface-1 p-1">
@@ -147,7 +202,15 @@ function FnOPage() {
       </div>
 
       {tab === "chain" ? (
-        <OptionChain rows={rows} atm={atm} underlying={u.symbol} expiry={EXPIRIES[expIdx]} lotSize={u.lot} />
+        <OptionChain
+          rows={rows}
+          atm={atm}
+          underlying={u.symbol}
+          expiry={expiry?.value ?? ""}
+          expiryLabel={expiry?.label ?? ""}
+          lotSize={u.lot}
+        />
+
       ) : (
 
         <StrategyBuilder underlying={u.symbol} />
@@ -181,7 +244,15 @@ function SegBtn({
   );
 }
 
-function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number) => void }) {
+function ExpiryPicker({
+  value,
+  onChange,
+  expiries,
+}: {
+  value: number;
+  onChange: (i: number) => void;
+  expiries: ExpiryInfo[];
+}) {
   return (
     <label className="relative inline-flex items-center gap-1 rounded-lg border border-border bg-surface-1 px-2.5 py-1.5 text-xs font-semibold">
       <span className="text-muted-foreground">Expiry</span>
@@ -190,9 +261,9 @@ function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number
         onChange={(e) => onChange(Number(e.target.value))}
         className="appearance-none bg-transparent pr-4 text-foreground outline-none"
       >
-        {EXPIRIES.map((e, i) => (
-          <option key={e} value={i} className="bg-surface-1 text-foreground">
-            {e}
+        {expiries.map((e, i) => (
+          <option key={e.value} value={i} className="bg-surface-1 text-foreground">
+            {e.label}
           </option>
         ))}
       </select>
@@ -201,7 +272,22 @@ function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number
   );
 }
 
-function OptionChain({ rows, atm, underlying, expiry, lotSize }: { rows: Row[]; atm: number; underlying: string; expiry: string; lotSize: number }) {
+function OptionChain({
+  rows,
+  atm,
+  underlying,
+  expiry,
+  expiryLabel,
+  lotSize,
+}: {
+  rows: Row[];
+  atm: number;
+  underlying: string;
+  expiry: string;
+  expiryLabel: string;
+  lotSize: number;
+}) {
+
   const [open, setOpen] = useState<{ strike: number; side: "ce" | "pe"; ltp: number; chg: number } | null>(null);
   const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
   const maxOi = useMemo(
@@ -251,7 +337,7 @@ function OptionChain({ rows, atm, underlying, expiry, lotSize }: { rows: Row[]; 
                   open.side === "ce" ? "bg-bull/15 text-bull" : "bg-bear/15 text-bear"
                 }`}
               >
-                {open.side.toUpperCase()} · {open.strike}
+                {open.side.toUpperCase()} · {open.strike} · {expiryLabel}
               </span>
               <span className="text-sm font-semibold tabular-nums" style={tickTone(open.chg)}>
                 ₹{open.ltp.toFixed(2)}

@@ -7,7 +7,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { formatINR, formatPct, signedClass } from "@/lib/format";
 import { listPositions, type Position } from "@/lib/trading.functions";
 import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
-import { useLiveTicks } from "@/hooks/use-live-ticks";
+import { instrumentKey, useInstrumentPrices, useLiveQuotes } from "@/hooks/use-live-ticks";
+import { expiryCountdown, isExpired } from "@/lib/expiry";
 
 const soon = (what: string) => toast.info(`${what} — coming soon`);
 
@@ -16,14 +17,9 @@ export const Route = createFileRoute("/_authenticated/portfolio")({
   component: PortfolioPage,
 });
 
-const HEADER_INDICES = [
-  { name: "NIFTY", value: 24196.8, change: -137.5, pct: -0.56 },
-  { name: "SENSEX", value: 77594.86, change: -556.59, pct: -0.71 },
-];
+const HEADER_SYMBOLS = ["NIFTY", "SENSEX"];
 
-function keyFor(p: Position) {
-  return `${p.symbol}|${p.instrument_type}|${p.strike ?? ""}|${p.expiry ?? ""}`;
-}
+type LivePosition = Position & { expired: boolean; countdown: string };
 
 function PortfolioPage() {
   const [tab, setTab] = useState<"Investments" | "Positions">("Investments");
@@ -36,32 +32,45 @@ function PortfolioPage() {
     refetchInterval: 15000,
   });
   const base = rawPositions ?? [];
-  const ticks = useLiveTicks(base.map(keyFor));
-  const all: Position[] = base.map((p) => ({
-    ...p,
-    last_price: +(p.avg_price * (ticks[keyFor(p)] ?? 1)).toFixed(2),
-  }));
+  const headerQuotes = useLiveQuotes(HEADER_SYMBOLS);
+  // Options are repriced from live spot with Black–Scholes, so premiums decay
+  // into expiry and settle at intrinsic value once the contract expires.
+  const prices = useInstrumentPrices(base);
+  const all: LivePosition[] = base.map((p) => {
+    const live = prices[instrumentKey(p)];
+    return {
+      ...p,
+      last_price: live ? live.ltp : p.last_price,
+      expired: live ? live.expired : isExpired(p.expiry),
+      countdown: expiryCountdown(p.expiry),
+    };
+  });
   const equity = all.filter((p) => p.instrument_type === "EQ" && p.qty > 0);
   const derivatives = all.filter((p) => p.instrument_type !== "EQ" && p.qty !== 0);
+
 
   return (
     <div className="-mt-3 space-y-3">
       <section className="rounded-2xl border border-border bg-surface-1 p-3">
         <div className="flex items-center justify-between">
           <div className="flex gap-6">
-            {HEADER_INDICES.map((i) => (
-              <div key={i.name}>
-                <div className="text-[11px] font-semibold">{i.name}</div>
-                <div className="mt-0.5 flex items-baseline gap-1.5">
-                  <span className="text-sm font-semibold tabular-nums">
-                    {i.value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className={`text-[10px] tabular-nums ${signedClass(i.change)}`}>
-                    {i.change.toFixed(2)} ({formatPct(i.pct)})
-                  </span>
+            {HEADER_SYMBOLS.map((name) => {
+              const q = headerQuotes[name];
+              return (
+                <div key={name}>
+                  <div className="text-[11px] font-semibold">{name}</div>
+                  <div className="mt-0.5 flex items-baseline gap-1.5">
+                    <span className="text-sm font-semibold tabular-nums">
+                      {(q?.price ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className={`text-[10px] tabular-nums ${signedClass(q?.change ?? 0)}`}>
+                      {(q?.change ?? 0).toFixed(2)} ({formatPct(q?.changePct ?? 0)})
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
           </div>
           <button onClick={() => soon("Indices detail")} className="text-primary" aria-label="Expand indices">
             <ChevronDown className="size-5" />
@@ -227,7 +236,7 @@ function PositionsView({
   positions,
   onTrade,
 }: {
-  positions: Position[];
+  positions: LivePosition[];
   onTrade: (t: TradeTarget, side: "BUY" | "SELL") => void;
 }) {
   const [q, setQ] = useState("");
@@ -235,7 +244,10 @@ function PositionsView({
     () => positions.filter((p) => p.symbol.toLowerCase().includes(q.toLowerCase())),
     [positions, q],
   );
+  const open = filtered.filter((p) => !p.expired);
+  const expired = filtered.filter((p) => p.expired);
   const totalPnl = positions.reduce((s, p) => s + (p.last_price - p.avg_price) * p.qty, 0);
+
 
   if (positions.length === 0) {
     return (
@@ -283,64 +295,101 @@ function PositionsView({
       </div>
 
       <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1">
-        {filtered.map((p) => {
-          const pnl = (p.last_price - p.avg_price) * p.qty;
-          const isCE = p.instrument_type === "CE";
-          return (
-            <div key={`${p.symbol}-${p.strike}-${p.instrument_type}-${p.expiry}`} className="px-4 py-3">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>{p.qty} QTY</span>
-                <span>{p.instrument_type}</span>
-              </div>
-              <div className="mt-1 flex items-baseline justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">{p.symbol}</span>
-                  {p.strike && (
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                        isCE ? "bg-bull/15 text-bull" : "bg-bear/15 text-bear"
-                      }`}
-                    >
-                      {p.strike} {p.instrument_type}
-                    </span>
-                  )}
-                  {p.expiry && <span className="text-[10px] text-muted-foreground">{p.expiry}</span>}
-                </div>
-                <span className={`text-sm font-semibold tabular-nums ${signedClass(pnl)}`}>
-                  {pnl.toFixed(2)}
-                </span>
-              </div>
-              <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>
-                  {p.exchange} · AVG <span className="text-foreground">{p.avg_price.toFixed(2)}</span>
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <span>
-                    LTP <span className="text-foreground font-semibold tabular-nums">{p.last_price.toFixed(2)}</span>
-                  </span>
-                  <button
-                    onClick={() =>
-                      onTrade(
-                        {
-                          symbol: p.symbol,
-                          instrument_type: p.instrument_type as "CE" | "PE" | "EQ",
-                          strike: p.strike,
-                          expiry: p.expiry,
-                          exchange: p.exchange,
-                          price: p.last_price,
-                        },
-                        "SELL",
-                      )
-                    }
-                    className="ml-2 rounded-md bg-bear/15 px-2 py-0.5 text-[10px] font-semibold text-bear"
-                  >
-                    EXIT
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {open.map((p) => (
+          <PositionRow key={instrumentKey(p)} p={p} onTrade={onTrade} />
+        ))}
+      </div>
+
+      {expired.length > 0 && (
+        <div className="space-y-2">
+          <div className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Expired · settled at intrinsic value
+          </div>
+          <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1 opacity-70">
+            {expired.map((p) => (
+              <PositionRow key={instrumentKey(p)} p={p} onTrade={onTrade} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PositionRow({
+  p,
+  onTrade,
+}: {
+  p: LivePosition;
+  onTrade: (t: TradeTarget, side: "BUY" | "SELL") => void;
+}) {
+  const pnl = (p.last_price - p.avg_price) * p.qty;
+  const isCE = p.instrument_type === "CE";
+  return (
+    <div className="px-4 py-3">
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>{p.qty} QTY</span>
+        <span>{p.instrument_type}</span>
+      </div>
+      <div className="mt-1 flex items-baseline justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold">{p.symbol}</span>
+          {p.strike && (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                isCE ? "bg-bull/15 text-bull" : "bg-bear/15 text-bear"
+              }`}
+            >
+              {p.strike} {p.instrument_type}
+            </span>
+          )}
+          {p.expiry && <span className="text-[10px] text-muted-foreground">{p.expiry}</span>}
+          {p.countdown && (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                p.expired
+                  ? "bg-muted text-muted-foreground"
+                  : p.countdown.includes("h left") || p.countdown.includes("today")
+                    ? "bg-bear/15 text-bear"
+                    : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {p.countdown}
+            </span>
+          )}
+        </div>
+        <span className={`text-sm font-semibold tabular-nums ${signedClass(pnl)}`}>
+          {pnl.toFixed(2)}
+        </span>
+      </div>
+      <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>
+          {p.exchange} · AVG <span className="text-foreground">{p.avg_price.toFixed(2)}</span>
+        </span>
+        <div className="flex items-center gap-1.5">
+          <span>
+            {p.expired ? "SETTLED" : "LTP"}{" "}
+            <span className="text-foreground font-semibold tabular-nums">{p.last_price.toFixed(2)}</span>
+          </span>
+          <button
+            onClick={() =>
+              onTrade(
+                {
+                  symbol: p.symbol,
+                  instrument_type: p.instrument_type as "CE" | "PE" | "EQ",
+                  strike: p.strike,
+                  expiry: p.expiry,
+                  exchange: p.exchange,
+                  price: p.last_price,
+                },
+                "SELL",
+              )
+            }
+            className="ml-2 rounded-md bg-bear/15 px-2 py-0.5 text-[10px] font-semibold text-bear"
+          >
+            {p.expired ? "SQUARE OFF" : "EXIT"}
+          </button>
+        </div>
       </div>
     </div>
   );
