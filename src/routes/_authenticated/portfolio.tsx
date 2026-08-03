@@ -295,65 +295,106 @@ function PositionsView({
       </div>
 
       <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1">
-        {filtered.map((p) => {
-          const pnl = (p.last_price - p.avg_price) * p.qty;
-          const isCE = p.instrument_type === "CE";
-          return (
-            <div key={`${p.symbol}-${p.strike}-${p.instrument_type}-${p.expiry}`} className="px-4 py-3">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>{p.qty} QTY</span>
-                <span>{p.instrument_type}</span>
-              </div>
-              <div className="mt-1 flex items-baseline justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">{p.symbol}</span>
-                  {p.strike && (
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                        isCE ? "bg-bull/15 text-bull" : "bg-bear/15 text-bear"
-                      }`}
-                    >
-                      {p.strike} {p.instrument_type}
-                    </span>
-                  )}
-                  {p.expiry && <span className="text-[10px] text-muted-foreground">{p.expiry}</span>}
-                </div>
-                <span className={`text-sm font-semibold tabular-nums ${signedClass(pnl)}`}>
-                  {pnl.toFixed(2)}
-                </span>
-              </div>
-              <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>
-                  {p.exchange} · AVG <span className="text-foreground">{p.avg_price.toFixed(2)}</span>
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <span>
-                    LTP <span className="text-foreground font-semibold tabular-nums">{p.last_price.toFixed(2)}</span>
-                  </span>
-                  <button
-                    onClick={() =>
-                      onTrade(
-                        {
-                          symbol: p.symbol,
-                          instrument_type: p.instrument_type as "CE" | "PE" | "EQ",
-                          strike: p.strike,
-                          expiry: p.expiry,
-                          exchange: p.exchange,
-                          price: p.last_price,
-                        },
-                        "SELL",
-                      )
-                    }
-                    className="ml-2 rounded-md bg-bear/15 px-2 py-0.5 text-[10px] font-semibold text-bear"
-                  >
-                    EXIT
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {open.map((p) => (
+          <PositionRow key={instrumentKey(p)} p={p} onTrade={onTrade} />
+        ))}
       </div>
+
+      {expired.length > 0 && (
+        <div className="space-y-2">
+          <div className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Expired · settled at intrinsic value
+          </div>
+          <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1 opacity-70">
+            {expired.map((p) => (
+              <PositionRow key={instrumentKey(p)} p={p} onTrade={onTrade} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PositionRow({
+  p,
+  onTrade,
+}: {
+  p: LivePosition;
+  onTrade: (t: TradeTarget, side: "BUY" | "SELL") => void;
+}) {
+  const pnl = (p.last_price - p.avg_price) * p.qty;
+  const isCE = p.instrument_type === "CE";
+  return (
+    <div className="px-4 py-3">
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>{p.qty} QTY</span>
+        <span>{p.instrument_type}</span>
+      </div>
+      <div className="mt-1 flex items-baseline justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold">{p.symbol}</span>
+          {p.strike && (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                isCE ? "bg-bull/15 text-bull" : "bg-bear/15 text-bear"
+              }`}
+            >
+              {p.strike} {p.instrument_type}
+            </span>
+          )}
+          {p.expiry && <span className="text-[10px] text-muted-foreground">{p.expiry}</span>}
+          {p.countdown && (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                p.expired
+                  ? "bg-muted text-muted-foreground"
+                  : p.countdown.includes("h left") || p.countdown.includes("today")
+                    ? "bg-bear/15 text-bear"
+                    : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {p.countdown}
+            </span>
+          )}
+        </div>
+        <span className={`text-sm font-semibold tabular-nums ${signedClass(pnl)}`}>
+          {pnl.toFixed(2)}
+        </span>
+      </div>
+      <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>
+          {p.exchange} · AVG <span className="text-foreground">{p.avg_price.toFixed(2)}</span>
+        </span>
+        <div className="flex items-center gap-1.5">
+          <span>
+            {p.expired ? "SETTLED" : "LTP"}{" "}
+            <span className="text-foreground font-semibold tabular-nums">{p.last_price.toFixed(2)}</span>
+          </span>
+          <button
+            onClick={() =>
+              onTrade(
+                {
+                  symbol: p.symbol,
+                  instrument_type: p.instrument_type as "CE" | "PE" | "EQ",
+                  strike: p.strike,
+                  expiry: p.expiry,
+                  exchange: p.exchange,
+                  price: p.last_price,
+                },
+                "SELL",
+              )
+            }
+            className="ml-2 rounded-md bg-bear/15 px-2 py-0.5 text-[10px] font-semibold text-bear"
+          >
+            {p.expired ? "SQUARE OFF" : "EXIT"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
     </div>
   );
 }
