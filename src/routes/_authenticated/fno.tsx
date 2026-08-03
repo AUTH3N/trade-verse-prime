@@ -337,7 +337,7 @@ function OptionChain({
                   open.side === "ce" ? "bg-bull/15 text-bull" : "bg-bear/15 text-bear"
                 }`}
               >
-                {open.side.toUpperCase()} · {open.strike}
+                {open.side.toUpperCase()} · {open.strike} · {expiryLabel}
               </span>
               <span className="text-sm font-semibold tabular-nums" style={tickTone(open.chg)}>
                 ₹{open.ltp.toFixed(2)}
