@@ -236,7 +236,7 @@ function PositionsView({
   positions,
   onTrade,
 }: {
-  positions: Position[];
+  positions: LivePosition[];
   onTrade: (t: TradeTarget, side: "BUY" | "SELL") => void;
 }) {
   const [q, setQ] = useState("");
@@ -244,7 +244,10 @@ function PositionsView({
     () => positions.filter((p) => p.symbol.toLowerCase().includes(q.toLowerCase())),
     [positions, q],
   );
+  const open = filtered.filter((p) => !p.expired);
+  const expired = filtered.filter((p) => p.expired);
   const totalPnl = positions.reduce((s, p) => s + (p.last_price - p.avg_price) * p.qty, 0);
+
 
   if (positions.length === 0) {
     return (
