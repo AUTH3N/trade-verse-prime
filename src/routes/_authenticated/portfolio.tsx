@@ -394,7 +394,3 @@ function PositionRow({
     </div>
   );
 }
-
-    </div>
-  );
-}
