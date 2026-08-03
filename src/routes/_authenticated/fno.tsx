@@ -244,7 +244,15 @@ function SegBtn({
   );
 }
 
-function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number) => void }) {
+function ExpiryPicker({
+  value,
+  onChange,
+  expiries,
+}: {
+  value: number;
+  onChange: (i: number) => void;
+  expiries: ExpiryInfo[];
+}) {
   return (
     <label className="relative inline-flex items-center gap-1 rounded-lg border border-border bg-surface-1 px-2.5 py-1.5 text-xs font-semibold">
       <span className="text-muted-foreground">Expiry</span>
@@ -253,9 +261,9 @@ function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number
         onChange={(e) => onChange(Number(e.target.value))}
         className="appearance-none bg-transparent pr-4 text-foreground outline-none"
       >
-        {EXPIRIES.map((e, i) => (
-          <option key={e} value={i} className="bg-surface-1 text-foreground">
-            {e}
+        {expiries.map((e, i) => (
+          <option key={e.value} value={i} className="bg-surface-1 text-foreground">
+            {e.label}
           </option>
         ))}
       </select>
@@ -264,7 +272,22 @@ function ExpiryPicker({ value, onChange }: { value: number; onChange: (i: number
   );
 }
 
-function OptionChain({ rows, atm, underlying, expiry, lotSize }: { rows: Row[]; atm: number; underlying: string; expiry: string; lotSize: number }) {
+function OptionChain({
+  rows,
+  atm,
+  underlying,
+  expiry,
+  expiryLabel,
+  lotSize,
+}: {
+  rows: Row[];
+  atm: number;
+  underlying: string;
+  expiry: string;
+  expiryLabel: string;
+  lotSize: number;
+}) {
+
   const [open, setOpen] = useState<{ strike: number; side: "ce" | "pe"; ltp: number; chg: number } | null>(null);
   const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
   const maxOi = useMemo(
