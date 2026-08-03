@@ -91,6 +91,16 @@ function buildChain(
   });
 }
 
+const STRATEGY_PRESETS = [
+  { name: "Long Call", legs: "Buy 1 CE ATM", tag: "Bullish" },
+  { name: "Long Put", legs: "Buy 1 PE ATM", tag: "Bearish" },
+  { name: "Bull Call Spread", legs: "Buy CE + Sell higher CE", tag: "Bullish" },
+  { name: "Bear Put Spread", legs: "Buy PE + Sell lower PE", tag: "Bearish" },
+  { name: "Iron Condor", legs: "Sell OTM CE+PE, Buy wings", tag: "Neutral" },
+  { name: "Short Straddle", legs: "Sell ATM CE + PE", tag: "Neutral" },
+  { name: "Long Straddle", legs: "Buy ATM CE + PE", tag: "Volatility" },
+  { name: "Butterfly", legs: "1-2-1 CE / PE", tag: "Pinning" },
+];
 
 function FnOPage() {
   const [uIdx, setUIdx] = useState(0);
@@ -98,8 +108,19 @@ function FnOPage() {
   const [tab, setTab] = useState<"chain" | "strategy">("chain");
 
   const u = UNDERLYINGS[uIdx];
-  const rows = useMemo(() => buildChain(u.spot, u.step, u.symbol.length * 31 + expIdx), [u, expIdx]);
-  const atm = Math.round(u.spot / u.step) * u.step;
+  const { now, live, status } = useMarketClock(1000);
+  const expiries = useMemo(() => upcomingExpiries(now), [Math.floor(now / 3_600_000)]);
+  const expiry = expiries[Math.min(expIdx, expiries.length - 1)];
+  const quotes = useLiveQuotes([u.symbol]);
+  const q = quotes[u.symbol];
+  const spot = q?.price ?? 0;
+  const years = expiry ? yearsToExpiry(expiry.value, now) : 0;
+
+  const rows = useMemo(
+    () => (spot > 0 ? buildChain(u.symbol, spot, q.prevClose, u.step, years, u.symbol.length * 31 + expIdx) : []),
+    [u.symbol, u.step, spot, q?.prevClose, years, expIdx],
+  );
+  const atm = Math.round(spot / u.step) * u.step;
 
   return (
     <div className="space-y-4">
@@ -130,18 +151,40 @@ function FnOPage() {
       <div className="rounded-2xl border border-border bg-gradient-to-br from-surface-1 to-surface-2 p-4">
         <div className="flex items-end justify-between">
           <div>
-            <div className="text-xs text-muted-foreground">{u.symbol} · SPOT</div>
-            <div className="mt-0.5 text-2xl font-semibold tabular-nums">
-              {u.spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{u.symbol} · SPOT</span>
+              <span
+                className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                  live ? "bg-bull/15 text-bull" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <span className={`size-1.5 rounded-full ${live ? "bg-bull" : "bg-muted-foreground"}`} />
+                {live ? "LIVE" : "CLOSED"}
+              </span>
             </div>
-            <div className={`text-xs font-medium tabular-nums ${signedClass(u.chg)}`}>
-              {u.chg >= 0 ? "+" : ""}
-              {formatPct(u.chg)}
+            <div className="mt-0.5 text-2xl font-semibold tabular-nums">
+              {spot.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </div>
+            <div className={`text-xs font-medium tabular-nums ${signedClass(q?.change ?? 0)}`}>
+              {(q?.change ?? 0) >= 0 ? "+" : ""}
+              {(q?.change ?? 0).toFixed(2)} ({formatPct(q?.changePct ?? 0)})
+            </div>
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              O {q?.open.toFixed(2)} · H {q?.high.toFixed(2)} · L {q?.low.toFixed(2)} · {status.label}
             </div>
           </div>
-          <ExpiryPicker value={expIdx} onChange={setExpIdx} />
+          <div className="text-right">
+            <ExpiryPicker value={expIdx} onChange={setExpIdx} expiries={expiries} />
+            {expiry && (
+              <div className="mt-1.5 text-[10px] text-muted-foreground">
+                {expiryCountdown(expiry.value, now)}
+                {expiry.monthly ? " · Monthly" : " · Weekly"}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
 
       {/* Segmented control */}
       <div className="inline-flex rounded-xl border border-border bg-surface-1 p-1">
