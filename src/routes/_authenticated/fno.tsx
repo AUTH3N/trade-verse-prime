@@ -18,15 +18,12 @@ export const Route = createFileRoute("/_authenticated/fno")({
 });
 
 const UNDERLYINGS = [
-  { symbol: "NIFTY", spot: 24812.55, chg: 0.54, step: 50, lot: 25 },
-  { symbol: "BANKNIFTY", spot: 51043.2, chg: -0.43, step: 100, lot: 15 },
-  { symbol: "FINNIFTY", spot: 23110.4, chg: 0.28, step: 50, lot: 25 },
-  { symbol: "MIDCPNIFTY", spot: 12345.6, chg: 0.71, step: 25, lot: 50 },
-  { symbol: "SENSEX", spot: 81344.15, chg: 0.5, step: 100, lot: 10 },
+  { symbol: "NIFTY", step: 50, lot: 25 },
+  { symbol: "BANKNIFTY", step: 100, lot: 15 },
+  { symbol: "FINNIFTY", step: 50, lot: 25 },
+  { symbol: "MIDCPNIFTY", step: 25, lot: 50 },
+  { symbol: "SENSEX", step: 100, lot: 10 },
 ];
-
-
-const EXPIRIES = ["27 Nov", "04 Dec", "11 Dec", "25 Dec", "29 Jan"];
 
 type Row = {
   strike: number;
@@ -35,7 +32,7 @@ type Row = {
   itmCE: boolean; itmPE: boolean;
 };
 
-// Deterministic pseudo-random for stable UI mock data.
+// Deterministic pseudo-random for stable OI/volume depth.
 function seeded(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -44,46 +41,56 @@ function seeded(seed: number) {
   };
 }
 
-function buildChain(spot: number, step: number, seed: number): Row[] {
+/**
+ * Live option chain: every premium and Greek is Black–Scholes priced off the
+ * live spot and the selected expiry, so the chain decays as expiry approaches
+ * and reprices tick-by-tick with the underlying.
+ */
+function buildChain(
+  symbol: string,
+  spot: number,
+  prevClose: number,
+  step: number,
+  years: number,
+  seed: number,
+): Row[] {
   const rand = seeded(seed);
   const atm = Math.round(spot / step) * step;
   const strikes = Array.from({ length: 13 }, (_, i) => atm + (i - 6) * step);
+  const baseIv = baseIvFor(symbol);
+  const prevYears = Math.max(years + 1 / 365, 0);
+
   return strikes.map((k) => {
-    const moneyCE = Math.max(0, spot - k);
-    const movePE = Math.max(0, k - spot);
-    const timeVal = step * (1 + rand() * 2);
-    const ceLtp = +(moneyCE + timeVal).toFixed(2);
-    const peLtp = +(movePE + timeVal).toFixed(2);
+    const ivCe = impliedVol(spot, k, Math.max(years, 1e-6), baseIv);
+    const ivPe = impliedVol(spot, k, Math.max(years, 1e-6), baseIv * 1.04); // put skew
+    const ce = blackScholes("CE", spot, k, ivCe, years);
+    const pe = blackScholes("PE", spot, k, ivPe, years);
+    const cePrev = blackScholes("CE", prevClose, k, ivCe, prevYears);
+    const pePrev = blackScholes("PE", prevClose, k, ivPe, prevYears);
+    // Open interest clusters around round strikes and thins out in the wings.
+    const distance = Math.abs(k - atm) / step;
+    const cluster = Math.exp(-(distance * distance) / 18) * (0.6 + rand() * 0.8);
+
     return {
       strike: k,
-      ceLtp,
-      ceChg: +((rand() - 0.5) * 8).toFixed(2),
-      ceIv: +(12 + rand() * 10).toFixed(2),
-      ceOi: Math.round(20000 + rand() * 900000),
-      ceVol: Math.round(1000 + rand() * 80000),
-      ceDelta: +Math.min(0.98, Math.max(0.02, 0.5 + (spot - k) / (step * 20))).toFixed(2),
-      peLtp,
-      peChg: +((rand() - 0.5) * 8).toFixed(2),
-      peIv: +(12 + rand() * 10).toFixed(2),
-      peOi: Math.round(20000 + rand() * 900000),
-      peVol: Math.round(1000 + rand() * 80000),
-      peDelta: +(-Math.min(0.98, Math.max(0.02, 0.5 - (spot - k) / (step * 20)))).toFixed(2),
+      ceLtp: ce.price,
+      ceChg: +(ce.price - cePrev.price).toFixed(2),
+      ceIv: +(ivCe * 100).toFixed(2),
+      ceOi: Math.round(1_400_000 * cluster * (k >= atm ? 1.15 : 0.8)),
+      ceVol: Math.round(120_000 * cluster * (0.5 + rand())),
+      ceDelta: +ce.delta.toFixed(2),
+      peLtp: pe.price,
+      peChg: +(pe.price - pePrev.price).toFixed(2),
+      peIv: +(ivPe * 100).toFixed(2),
+      peOi: Math.round(1_400_000 * cluster * (k <= atm ? 1.15 : 0.8)),
+      peVol: Math.round(120_000 * cluster * (0.5 + rand())),
+      peDelta: +pe.delta.toFixed(2),
       itmCE: k < spot,
       itmPE: k > spot,
     };
   });
 }
 
-const STRATEGY_PRESETS = [
-  { name: "Long Call", legs: "Buy 1 CE ATM", tag: "Bullish" },
-  { name: "Long Put", legs: "Buy 1 PE ATM", tag: "Bearish" },
-  { name: "Bull Call Spread", legs: "Buy CE + Sell higher CE", tag: "Bullish" },
-  { name: "Bear Put Spread", legs: "Buy PE + Sell lower PE", tag: "Bearish" },
-  { name: "Iron Condor", legs: "Sell OTM CE+PE, Buy wings", tag: "Neutral" },
-  { name: "Short Straddle", legs: "Sell ATM CE + PE", tag: "Neutral" },
-  { name: "Long Straddle", legs: "Buy ATM CE + PE", tag: "Volatility" },
-  { name: "Butterfly", legs: "1-2-1 CE / PE", tag: "Pinning" },
-];
 
 function FnOPage() {
   const [uIdx, setUIdx] = useState(0);
