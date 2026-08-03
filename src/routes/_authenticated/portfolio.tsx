@@ -7,7 +7,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { formatINR, formatPct, signedClass } from "@/lib/format";
 import { listPositions, type Position } from "@/lib/trading.functions";
 import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
-import { useLiveTicks } from "@/hooks/use-live-ticks";
+import { instrumentKey, useInstrumentPrices, useLiveQuotes } from "@/hooks/use-live-ticks";
+import { expiryCountdown, isExpired } from "@/lib/expiry";
 
 const soon = (what: string) => toast.info(`${what} — coming soon`);
 
@@ -16,14 +17,9 @@ export const Route = createFileRoute("/_authenticated/portfolio")({
   component: PortfolioPage,
 });
 
-const HEADER_INDICES = [
-  { name: "NIFTY", value: 24196.8, change: -137.5, pct: -0.56 },
-  { name: "SENSEX", value: 77594.86, change: -556.59, pct: -0.71 },
-];
+const HEADER_SYMBOLS = ["NIFTY", "SENSEX"];
 
-function keyFor(p: Position) {
-  return `${p.symbol}|${p.instrument_type}|${p.strike ?? ""}|${p.expiry ?? ""}`;
-}
+type LivePosition = Position & { expired: boolean; countdown: string };
 
 function PortfolioPage() {
   const [tab, setTab] = useState<"Investments" | "Positions">("Investments");
@@ -36,13 +32,22 @@ function PortfolioPage() {
     refetchInterval: 15000,
   });
   const base = rawPositions ?? [];
-  const ticks = useLiveTicks(base.map(keyFor));
-  const all: Position[] = base.map((p) => ({
-    ...p,
-    last_price: +(p.avg_price * (ticks[keyFor(p)] ?? 1)).toFixed(2),
-  }));
+  const headerQuotes = useLiveQuotes(HEADER_SYMBOLS);
+  // Options are repriced from live spot with Black–Scholes, so premiums decay
+  // into expiry and settle at intrinsic value once the contract expires.
+  const prices = useInstrumentPrices(base);
+  const all: LivePosition[] = base.map((p) => {
+    const live = prices[instrumentKey(p)];
+    return {
+      ...p,
+      last_price: live ? live.ltp : p.last_price,
+      expired: live ? live.expired : isExpired(p.expiry),
+      countdown: expiryCountdown(p.expiry),
+    };
+  });
   const equity = all.filter((p) => p.instrument_type === "EQ" && p.qty > 0);
   const derivatives = all.filter((p) => p.instrument_type !== "EQ" && p.qty !== 0);
+
 
   return (
     <div className="-mt-3 space-y-3">
