@@ -202,7 +202,15 @@ function FnOPage() {
       </div>
 
       {tab === "chain" ? (
-        <OptionChain rows={rows} atm={atm} underlying={u.symbol} expiry={EXPIRIES[expIdx]} lotSize={u.lot} />
+        <OptionChain
+          rows={rows}
+          atm={atm}
+          underlying={u.symbol}
+          expiry={expiry?.value ?? ""}
+          expiryLabel={expiry?.label ?? ""}
+          lotSize={u.lot}
+        />
+
       ) : (
 
         <StrategyBuilder underlying={u.symbol} />
