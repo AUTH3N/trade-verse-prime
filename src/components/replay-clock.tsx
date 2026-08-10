@@ -87,7 +87,6 @@ export function useReplayClock(intervalMs = 1000) {
       now: status.open ? liveNow : status.lastCloseMs,
       live: status.open,
       replaying: false,
-      the: undefined as never,
       label: status.open ? "Live market clock" : status.label,
     } as ReplayClock;
   }, [mode, asOf, liveNow, status.open, status.lastCloseMs, status.label]);
