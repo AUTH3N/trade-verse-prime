@@ -4,7 +4,9 @@ import { ArrowLeft, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listPositions, type Position } from "@/lib/trading.functions";
-import { instrumentKey, priceInstrument, useMarketClock } from "@/hooks/use-live-ticks";
+import { instrumentKey, priceInstrument } from "@/hooks/use-live-ticks";
+import { ReplayControls, useReplayClock } from "@/components/replay-clock";
+
 import { baseIvFor, quoteAt } from "@/lib/market-engine";
 import { blackScholes, impliedVol, intrinsicValue, type OptionType } from "@/lib/option-pricing";
 import { isExpired, yearsToExpiry, expiryCountdown } from "@/lib/expiry";
