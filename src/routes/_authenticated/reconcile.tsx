@@ -124,8 +124,10 @@ function ReconcilePage() {
     refetchInterval: 15000,
   });
 
-  // One shared clock so every row is reconciled against the same instant.
-  const { now, live, status } = useMarketClock(1000);
+  // One shared clock (live session or historical replay) so every row is
+  // reconciled against the exact same instant.
+  const replay = useReplayClock(1000);
+  const { now, label } = replay.clock;
   const open = (data ?? []).filter((p) => p.qty !== 0);
   const rows = useMemo(() => build(open, now), [JSON.stringify(open), now]);
 
@@ -141,7 +143,7 @@ function ReconcilePage() {
         <div className="flex-1">
           <h1 className="text-base font-semibold">Pricing reconciliation</h1>
           <p className="text-[11px] text-muted-foreground">
-            {live ? "Live market clock" : status.label} ·{" "}
+            {label} ·{" "}
             {new Date(now).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })} IST
           </p>
         </div>
@@ -153,6 +155,9 @@ function ReconcilePage() {
           <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} />
         </button>
       </header>
+
+      <ReplayControls state={replay} />
+
 
       <section
         className={`rounded-2xl border p-4 ${
