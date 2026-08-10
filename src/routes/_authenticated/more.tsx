@@ -12,7 +12,9 @@ import {
   MessageSquare,
   QrCode,
   Receipt,
+  Scale as ScaleIcon,
   Settings as SettingsIcon,
+
   ShieldAlert,
   Trophy,
   UserPlus,
@@ -81,7 +83,9 @@ function MorePage() {
         <NavTile to="/leaderboard" icon={<Trophy className="size-6" />} label="Leaderboard" accent="warn" />
         <NavTile to="/analytics" icon={<BarChart3 className="size-6" />} label="Performance" accent="bull" />
         <NavTile to="/learn" icon={<GraduationCap className="size-6" />} label="Learn" accent="primary" />
+        <NavTile to="/reconcile" icon={<ScaleIcon className="size-6" />} label="Price check" accent="primary" />
       </section>
+
 
       <section className="rounded-2xl border border-border bg-surface-1 p-4">
         <div className="text-sm font-semibold">Reports</div>
