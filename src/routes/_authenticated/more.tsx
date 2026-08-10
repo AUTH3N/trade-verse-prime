@@ -12,7 +12,9 @@ import {
   MessageSquare,
   QrCode,
   Receipt,
+  Scale as ScaleIcon,
   Settings as SettingsIcon,
+
   ShieldAlert,
   Trophy,
   UserPlus,
