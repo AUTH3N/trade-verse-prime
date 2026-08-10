@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedReconcileRouteImport } from './routes/_authenticated/reconcile'
 import { Route as AuthenticatedPortfolioRouteImport } from './routes/_authenticated/portfolio'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedMoreRouteImport } from './routes/_authenticated/more'
@@ -46,6 +47,11 @@ const AuthenticatedWatchlistRoute = AuthenticatedWatchlistRouteImport.update({
 const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReconcileRoute = AuthenticatedReconcileRouteImport.update({
+  id: '/reconcile',
+  path: '/reconcile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPortfolioRoute = AuthenticatedPortfolioRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/more': typeof AuthenticatedMoreRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/portfolio': typeof AuthenticatedPortfolioRoute
+  '/reconcile': typeof AuthenticatedReconcileRoute
   '/search': typeof AuthenticatedSearchRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
 }
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/more': typeof AuthenticatedMoreRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/portfolio': typeof AuthenticatedPortfolioRoute
+  '/reconcile': typeof AuthenticatedReconcileRoute
   '/search': typeof AuthenticatedSearchRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
 }
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/more': typeof AuthenticatedMoreRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
   '/_authenticated/portfolio': typeof AuthenticatedPortfolioRoute
+  '/_authenticated/reconcile': typeof AuthenticatedReconcileRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
 }
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/orders'
     | '/portfolio'
+    | '/reconcile'
     | '/search'
     | '/watchlist'
   fileRoutesByTo: FileRoutesByTo
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/orders'
     | '/portfolio'
+    | '/reconcile'
     | '/search'
     | '/watchlist'
   id:
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_authenticated/more'
     | '/_authenticated/orders'
     | '/_authenticated/portfolio'
+    | '/_authenticated/reconcile'
     | '/_authenticated/search'
     | '/_authenticated/watchlist'
   fileRoutesById: FileRoutesById
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reconcile': {
+      id: '/_authenticated/reconcile'
+      path: '/reconcile'
+      fullPath: '/reconcile'
+      preLoaderRoute: typeof AuthenticatedReconcileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/portfolio': {
@@ -310,6 +329,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMoreRoute: typeof AuthenticatedMoreRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
   AuthenticatedPortfolioRoute: typeof AuthenticatedPortfolioRoute
+  AuthenticatedReconcileRoute: typeof AuthenticatedReconcileRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
 }
@@ -324,6 +344,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMoreRoute: AuthenticatedMoreRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
   AuthenticatedPortfolioRoute: AuthenticatedPortfolioRoute,
+  AuthenticatedReconcileRoute: AuthenticatedReconcileRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
 }
