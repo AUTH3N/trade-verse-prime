@@ -1,11 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronRight, Eye, TrendingUp, X } from "lucide-react";
+import { ChevronRight, Eye, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { formatINR, formatPct, signedClass } from "@/lib/format";
-import { OptionChart } from "@/components/option-chart";
 import { TradeTicket, type TradeTarget } from "@/components/trade-ticket";
 import { listPositions } from "@/lib/trading.functions";
 import { getWallet } from "@/lib/account.functions";
@@ -60,11 +59,8 @@ const INVESTMENT_PRODUCTS = [
   { label: "ETF", icon: "↗" },
 ];
 
-type ChartTarget = { name: string; value: number; change: number; pct: number };
-
 function HomePage() {
   const [tab, setTab] = useState<Tab>("Stocks");
-  const [chart, setChart] = useState<ChartTarget | null>(null);
   const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
 
   return (
@@ -86,10 +82,8 @@ function HomePage() {
         ))}
       </div>
 
-      {tab === "Stocks" && <StocksTab onOpenChart={setChart} onTrade={(t) => setTicket({ target: t, side: "BUY" })} />}
-      {tab === "F&O" && <FnoTab onOpenChart={setChart} onTrade={(t) => setTicket({ target: t, side: "BUY" })} />}
-
-      {chart && <IndexChartSheet target={chart} onClose={() => setChart(null)} />}
+      {tab === "Stocks" && <StocksTab onTrade={(t) => setTicket({ target: t, side: "BUY" })} />}
+      {tab === "F&O" && <FnoTab onTrade={(t) => setTicket({ target: t, side: "BUY" })} />}
       {ticket && (
         <TradeTicket
           target={ticket.target}
@@ -97,58 +91,6 @@ function HomePage() {
           onClose={() => setTicket(null)}
         />
       )}
-    </div>
-  );
-}
-
-function IndexChartSheet({ target, onClose }: { target: ChartTarget; onClose: () => void }) {
-  const bullish = target.change >= 0;
-  const seed = [...target.name].reduce((s, c) => s + c.charCodeAt(0), 0);
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-2xl rounded-t-3xl border border-border bg-surface-1 p-4 sm:rounded-3xl">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs font-semibold tracking-wide text-muted-foreground">
-              {target.name} · Intraday
-            </div>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl font-bold tabular-nums">
-                {target.value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-              </span>
-              <span className={`text-sm font-semibold tabular-nums ${signedClass(target.change)}`}>
-                {target.change >= 0 ? "+" : ""}
-                {target.change.toFixed(2)} ({formatPct(target.pct)})
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="grid size-9 place-items-center rounded-full bg-background text-muted-foreground"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-background">
-          <OptionChart seed={seed} base={target.value} height={260} bullish={bullish} />
-        </div>
-        <div className="mt-3 flex gap-2">
-          <Link
-            to="/fno"
-            onClick={onClose}
-            className="flex-1 rounded-xl bg-primary py-2.5 text-center text-sm font-semibold text-primary-foreground"
-          >
-            Open option chain
-          </Link>
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold"
-          >
-            Close
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -162,7 +104,7 @@ function SectionTitle({ title, right }: { title: string; right?: React.ReactNode
   );
 }
 
-function IndicesRow({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) {
+function IndicesRow() {
   return (
     <section>
       <SectionTitle
@@ -175,10 +117,10 @@ function IndicesRow({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) 
       />
       <div className="mt-3 -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {INDICES.map((i) => (
-          <button
+          <Link
             key={i.name}
-            type="button"
-            onClick={() => onOpenChart(i)}
+            to="/instrument/$symbol"
+            params={{ symbol: i.name }}
             className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4 text-left transition hover:border-primary/60"
           >
             <div className="text-[11px] font-semibold tracking-wide">{i.name}</div>
@@ -189,7 +131,7 @@ function IndicesRow({ onOpenChart }: { onOpenChart: (t: ChartTarget) => void }) 
               {i.change >= 0 ? "+" : ""}
               {i.change.toFixed(2)} ({formatPct(i.pct)})
             </div>
-          </button>
+          </Link>
         ))}
       </div>
     </section>
@@ -253,31 +195,22 @@ function PortfolioSummary() {
   );
 }
 
-function StocksTab({
-  onOpenChart,
-  onTrade,
-}: {
-  onOpenChart: (t: ChartTarget) => void;
-  onTrade: (t: TradeTarget) => void;
-}) {
+function StocksTab({ onTrade }: { onTrade: (t: TradeTarget) => void }) {
   return (
     <div className="space-y-5">
       <PortfolioSummary />
 
-      <IndicesRow onOpenChart={onOpenChart} />
+      <IndicesRow />
 
       <section>
         <SectionTitle title="Most bought on Vyro" />
         <div className="mt-3 -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {MOST_BOUGHT_STOCKS.map((s) => (
-            <button
+            <div
               key={s.symbol}
-              type="button"
-              onClick={() =>
-                onTrade({ symbol: s.symbol, price: s.ltp, exchange: "NSE", instrument_type: "EQ" })
-              }
               className="min-w-[46%] snap-start rounded-2xl border border-border bg-surface-1 p-4 text-left transition hover:border-primary/60"
             >
+              <Link to="/instrument/$symbol" params={{ symbol: s.symbol }} className="block">
               <div
                 className="grid size-8 place-items-center rounded-full text-[9px] font-bold text-white"
                 style={{ background: s.color }}
@@ -290,7 +223,17 @@ function StocksTab({
                 {s.chg >= 0 ? "+" : ""}
                 {s.chg.toFixed(2)} ({formatPct(s.pct)})
               </div>
-            </button>
+              </Link>
+              <button
+                type="button"
+                onClick={() =>
+                  onTrade({ symbol: s.symbol, price: s.ltp, exchange: "NSE", instrument_type: "EQ" })
+                }
+                className="mt-2 w-full rounded-lg bg-primary/15 py-1.5 text-xs font-semibold text-primary"
+              >
+                Buy
+              </button>
+            </div>
           ))}
         </div>
       </section>
@@ -335,13 +278,7 @@ function StocksTab({
   );
 }
 
-function FnoTab({
-  onOpenChart,
-  onTrade,
-}: {
-  onOpenChart: (t: ChartTarget) => void;
-  onTrade: (t: TradeTarget) => void;
-}) {
+function FnoTab({ onTrade }: { onTrade: (t: TradeTarget) => void }) {
   const posFn = useServerFn(listPositions);
   const { data: positions } = useQuery({ queryKey: ["positions"], queryFn: () => posFn() });
   const fno = (positions ?? []).filter((p) => p.instrument_type !== "EQ" && p.qty !== 0);
@@ -372,7 +309,7 @@ function FnoTab({
         </Link>
       </section>
 
-      <IndicesRow onOpenChart={onOpenChart} />
+      <IndicesRow />
 
       <section>
         <div className="flex items-center justify-between">
@@ -386,13 +323,11 @@ function FnoTab({
 
         <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {OPTION_INDEXES.map((o) => {
-            const match = INDICES.find((i) => i.name === o.symbol);
-            const target: ChartTarget = match ?? { name: o.symbol, value: 20000, change: 0, pct: 0 };
             return (
-              <button
+              <Link
                 key={o.symbol}
-                type="button"
-                onClick={() => onOpenChart(target)}
+                to="/instrument/$symbol"
+                params={{ symbol: o.symbol }}
                 className="flex min-w-[64px] flex-col items-center gap-1.5"
               >
                 <div
@@ -401,7 +336,7 @@ function FnoTab({
                   {o.label}
                 </div>
                 <div className="text-[10px] font-medium">{o.symbol}</div>
-              </button>
+              </Link>
             );
           })}
         </div>

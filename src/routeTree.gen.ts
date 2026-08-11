@@ -24,6 +24,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedFundsRouteImport } from './routes/_authenticated/funds'
 import { Route as AuthenticatedFnoRouteImport } from './routes/_authenticated/fno'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedInstrumentSymbolRouteImport } from './routes/_authenticated/instrument.$symbol'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -100,6 +101,12 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInstrumentSymbolRoute =
+  AuthenticatedInstrumentSymbolRouteImport.update({
+    id: '/instrument/$symbol',
+    path: '/instrument/$symbol',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/reconcile': typeof AuthenticatedReconcileRoute
   '/search': typeof AuthenticatedSearchRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
+  '/instrument/$symbol': typeof AuthenticatedInstrumentSymbolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,6 +140,7 @@ export interface FileRoutesByTo {
   '/reconcile': typeof AuthenticatedReconcileRoute
   '/search': typeof AuthenticatedSearchRoute
   '/watchlist': typeof AuthenticatedWatchlistRoute
+  '/instrument/$symbol': typeof AuthenticatedInstrumentSymbolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -150,6 +159,7 @@ export interface FileRoutesById {
   '/_authenticated/reconcile': typeof AuthenticatedReconcileRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
+  '/_authenticated/instrument/$symbol': typeof AuthenticatedInstrumentSymbolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/reconcile'
     | '/search'
     | '/watchlist'
+    | '/instrument/$symbol'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/reconcile'
     | '/search'
     | '/watchlist'
+    | '/instrument/$symbol'
   id:
     | '__root__'
     | '/'
@@ -201,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reconcile'
     | '/_authenticated/search'
     | '/_authenticated/watchlist'
+    | '/_authenticated/instrument/$symbol'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/instrument/$symbol': {
+      id: '/_authenticated/instrument/$symbol'
+      path: '/instrument/$symbol'
+      fullPath: '/instrument/$symbol'
+      preLoaderRoute: typeof AuthenticatedInstrumentSymbolRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -332,6 +352,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReconcileRoute: typeof AuthenticatedReconcileRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedWatchlistRoute: typeof AuthenticatedWatchlistRoute
+  AuthenticatedInstrumentSymbolRoute: typeof AuthenticatedInstrumentSymbolRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -347,6 +368,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReconcileRoute: AuthenticatedReconcileRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedWatchlistRoute: AuthenticatedWatchlistRoute,
+  AuthenticatedInstrumentSymbolRoute: AuthenticatedInstrumentSymbolRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
