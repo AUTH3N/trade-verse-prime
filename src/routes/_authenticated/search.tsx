@@ -129,12 +129,12 @@ function Row({
       <div className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-1 text-muted-foreground">
         {icon}
       </div>
-      <div className="min-w-0 flex-1">
+      <Link to="/instrument/$symbol" params={{ symbol: sym }} className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{name}</div>
         <div className="mt-0.5 text-xs text-muted-foreground">
           {exch} · {sym}
         </div>
-      </div>
+      </Link>
       <button
         onClick={() => setSaved((s) => !s)}
         className={isSaved ? "text-primary" : "text-muted-foreground"}

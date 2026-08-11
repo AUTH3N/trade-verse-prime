@@ -62,11 +62,11 @@ function WatchlistPage() {
       <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface-1">
         {STOCKS.map((s) => (
           <div key={s.sym} className="flex items-center gap-3 px-4 py-3">
-            <div className="min-w-0 flex-1">
+            <Link to="/instrument/$symbol" params={{ symbol: s.sym }} className="min-w-0 flex-1">
               <div className="text-sm font-semibold">{s.sym}</div>
               <div className="text-[11px] text-muted-foreground">{s.exch} · EQ</div>
-            </div>
-            <div className="text-right">
+            </Link>
+            <Link to="/instrument/$symbol" params={{ symbol: s.sym }} className="text-right">
               <div className="text-sm font-semibold tabular-nums">
                 {s.ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
@@ -74,7 +74,7 @@ function WatchlistPage() {
                 {s.chg >= 0 ? "+" : ""}
                 {s.chg.toFixed(2)} ({formatPct(s.pct)})
               </div>
-            </div>
+            </Link>
             <div className="flex flex-col gap-1">
               <button
                 onClick={() =>
