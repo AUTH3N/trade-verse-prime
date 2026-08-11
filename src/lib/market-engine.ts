@@ -205,3 +205,104 @@ export function intradaySeries(symbol: string, at: number = Date.now(), points =
   }
   return out;
 }
+
+export type Candle = {
+  time: number; // unix seconds
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export type ChartRange = "1D" | "1W" | "1M" | "1Y" | "5Y";
+
+function dayOHLC(sym: string, day: number, maxProgress = 1): Candle {
+  const open = pathPrice(sym, day, 0);
+  const close = pathPrice(sym, day, maxProgress);
+  let high = Math.max(open, close);
+  let low = Math.min(open, close);
+  for (let i = 1; i < 24; i++) {
+    const p = pathPrice(sym, day, (i / 24) * maxProgress);
+    if (p > high) high = p;
+    if (p < low) low = p;
+  }
+  const seed = hashString(sym) + day * 7717;
+  const volumeBase = sym.length > 6 ? 3_000_000 : 12_000_000;
+  return {
+    time: Math.round((day * 86_400_000 - IST_OFFSET_MS + CLOSE_MIN * 60_000) / 1000),
+    open: +open.toFixed(2),
+    high: +high.toFixed(2),
+    low: +low.toFixed(2),
+    close: +close.toFixed(2),
+    volume: Math.round(volumeBase * (0.4 + hash2(seed, 21))),
+  };
+}
+
+/** Historical candles for a symbol over a chart range. Deterministic. */
+export function historySeries(
+  symbol: string,
+  range: ChartRange = "1D",
+  at: number = Date.now(),
+): Candle[] {
+  const sym = symbol.toUpperCase();
+  const { day, progress } = sessionClock(at);
+
+  if (range === "1D") {
+    const out: Candle[] = [];
+    const dayStartUtc = day * 86_400_000 - IST_OFFSET_MS + OPEN_MIN * 60_000;
+    const buckets = 75; // 5-minute candles
+    const seed = hashString(sym) + day * 7717;
+    for (let i = 0; i < buckets; i++) {
+      const f0 = i / buckets;
+      const f1 = (i + 1) / buckets;
+      if (f0 > progress) break;
+      const end = Math.min(f1, progress);
+      const open = pathPrice(sym, day, f0);
+      const close = pathPrice(sym, day, end);
+      let high = Math.max(open, close);
+      let low = Math.min(open, close);
+      for (let k = 1; k < 6; k++) {
+        const p = pathPrice(sym, day, f0 + ((end - f0) * k) / 6);
+        if (p > high) high = p;
+        if (p < low) low = p;
+      }
+      out.push({
+        time: Math.round((dayStartUtc + f0 * SESSION_MIN * 60_000) / 1000),
+        open: +open.toFixed(2),
+        high: +high.toFixed(2),
+        low: +low.toFixed(2),
+        close: +close.toFixed(2),
+        volume: Math.round((60_000 + hash2(seed, 300 + i) * 900_000)),
+      });
+    }
+    return out;
+  }
+
+  const spans: Record<Exclude<ChartRange, "1D">, { days: number; step: number }> = {
+    "1W": { days: 7, step: 1 },
+    "1M": { days: 30, step: 1 },
+    "1Y": { days: 365, step: 3 },
+    "5Y": { days: 1825, step: 14 },
+  };
+  const { days, step } = spans[range];
+  const out: Candle[] = [];
+  for (let d = day - days; d <= day; d += step) {
+    const dow = new Date((d * 86_400_000)).getUTCDay();
+    if (dow === 0 || dow === 6) continue;
+    out.push(dayOHLC(sym, d, d === day ? Math.max(progress, 0.02) : 1));
+  }
+  return out;
+}
+
+/** 52-week high/low from the daily path. */
+export function yearRange(symbol: string, at: number = Date.now()) {
+  const candles = historySeries(symbol, "1Y", at);
+  let high = -Infinity;
+  let low = Infinity;
+  for (const c of candles) {
+    if (c.high > high) high = c.high;
+    if (c.low < low) low = c.low;
+  }
+  return { high: +high.toFixed(2), low: +low.toFixed(2) };
+}
