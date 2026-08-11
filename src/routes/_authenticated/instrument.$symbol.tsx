@@ -449,7 +449,7 @@ function FnoTab({
   const step = spot > 20000 ? 100 : spot > 2000 ? 50 : 10;
   const atm = Math.round(spot / step) * step;
   const strikes = [atm - step, atm, atm + step];
-  const years = Math.max(yearsToExpiry(expiry?.date, now), 1e-6);
+  const years = Math.max(yearsToExpiry(expiry?.value, now), 1e-6);
   const iv = impliedVol(spot, atm, years, baseIvFor(symbol));
 
   return (
@@ -457,7 +457,7 @@ function FnoTab({
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {expiries.map((e, i) => (
           <button
-            key={e.date}
+            key={e.value}
             type="button"
             onClick={() => setExpiryIdx(i)}
             className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${
@@ -471,7 +471,7 @@ function FnoTab({
         ))}
       </div>
       <div className="text-xs text-muted-foreground">
-        Expires in {expiryCountdown(expiry?.date, now)} · ATM IV {(iv * 100).toFixed(1)}%
+        Expires in {expiryCountdown(expiry?.value, now)} · ATM IV {(iv * 100).toFixed(1)}%
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-surface-1">
@@ -490,7 +490,7 @@ function FnoTab({
                 type="button"
                 onClick={() =>
                   onTrade({
-                    target: { symbol, instrument_type: "CE", strike: k, expiry: expiry?.date, price: +ce.price.toFixed(2), lotSize: lot, exchange: "NSE" },
+                    target: { symbol, instrument_type: "CE", strike: k, expiry: expiry?.value, price: +ce.price.toFixed(2), lotSize: lot, exchange: "NSE" },
                     side: "BUY",
                   })
                 }
@@ -505,7 +505,7 @@ function FnoTab({
                 type="button"
                 onClick={() =>
                   onTrade({
-                    target: { symbol, instrument_type: "PE", strike: k, expiry: expiry?.date, price: +pe.price.toFixed(2), lotSize: lot, exchange: "NSE" },
+                    target: { symbol, instrument_type: "PE", strike: k, expiry: expiry?.value, price: +pe.price.toFixed(2), lotSize: lot, exchange: "NSE" },
                     side: "BUY",
                   })
                 }
