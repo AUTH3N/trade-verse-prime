@@ -253,16 +253,20 @@ function InstrumentPage() {
             <span className="text-sm">Set alert</span>
           </button>
 
-          <Link
-            to="/fno"
-            className="relative flex items-center justify-between overflow-hidden rounded-2xl border border-border bg-surface-1 p-4"
+          <button
+            type="button"
+            onClick={() => setTicket({ target, side: "BUY" })}
+            className="relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-border bg-surface-1 p-4 text-left"
           >
             <div>
               <div className="text-base font-semibold">Trade from Charts</div>
-              <div className="mt-0.5 text-xs text-muted-foreground">Superfast trading & scalping</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {symbol} · {meta.exch} · LTP ₹{quote.price.toFixed(2)}
+              </div>
             </div>
             <CandlestickChart className="size-8 text-bull" />
-          </Link>
+          </button>
+
 
           <section>
             <button
