@@ -214,8 +214,57 @@ function InstrumentPage() {
               <span className={signedClass(rangeReturn)}>{formatPct(rangeReturn)}</span>
             </div>
             <div className="mt-2">
-              <PriceChart candles={candles} mode={mode} bullish={bullish} height={260} />
+              <PriceChart
+                candles={candles}
+                mode={mode}
+                bullish={bullish}
+                height={260}
+                onPricePick={(p) => setPickedPrice(p)}
+              />
             </div>
+            {pickedPrice != null ? (
+              <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-surface-1 px-3 py-2">
+                <div className="flex-1 text-xs text-muted-foreground">
+                  Selected price
+                  <span className="ml-1 font-semibold tabular-nums text-foreground">
+                    ₹{pickedPrice.toFixed(2)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTicket({ target, side: "BUY", limitPrice: pickedPrice });
+                    setPickedPrice(null);
+                  }}
+                  className="rounded-lg bg-bull px-3 py-1.5 text-xs font-bold text-white"
+                >
+                  BUY @ limit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTicket({ target, side: "SELL", limitPrice: pickedPrice });
+                    setPickedPrice(null);
+                  }}
+                  className="rounded-lg bg-bear px-3 py-1.5 text-xs font-bold text-white"
+                >
+                  SELL @ limit
+                </button>
+                <button
+                  type="button"
+                  aria-label="Clear selected price"
+                  onClick={() => setPickedPrice(null)}
+                  className="rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 text-center text-[11px] text-muted-foreground">
+                Tap anywhere on the chart to pick a price for a limit order
+              </div>
+            )}
+
             <div className="mt-2 flex items-center justify-between gap-2">
               <div className="flex flex-1 items-center justify-between">
                 {RANGES.map((r) => (
