@@ -19,6 +19,7 @@ import { historySeries, quoteAt, yearRange, type ChartRange } from "@/lib/market
 import { upcomingExpiries, expiryCountdown, yearsToExpiry } from "@/lib/expiry";
 import { blackScholes, impliedVol } from "@/lib/option-pricing";
 import { baseIvFor } from "@/lib/market-engine";
+import { loadPick, savePick, clearPick } from "@/lib/last-pick";
 
 export const Route = createFileRoute("/_authenticated/instrument/$symbol")({
   head: ({ params }) => {
@@ -107,12 +108,24 @@ function InstrumentPage() {
     limitPrice?: number;
   } | null>(null);
   const [pickedPrice, setPickedPrice] = useState<number | null>(null);
+  const [pickedSide, setPickedSide] = useState<"BUY" | "SELL">("BUY");
 
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setSaved(localStorage.getItem(`vyro:wl:${symbol}`) === "1");
+    const remembered = loadPick(symbol);
+    setPickedPrice(remembered?.price ?? null);
+    setPickedSide(remembered?.side ?? "BUY");
   }, [symbol]);
+
+  function pickAndTrade(side: "BUY" | "SELL", price: number) {
+    savePick(symbol, price, side);
+    setPickedSide(side);
+    setPickedPrice(price);
+    setTicket({ target, side, limitPrice: price });
+  }
+
 
   // Chart data refreshes on a slower cadence than the ticking header.
   const bucket = Math.floor(now / 15_000);
@@ -219,7 +232,10 @@ function InstrumentPage() {
                 mode={mode}
                 bullish={bullish}
                 height={260}
-                onPricePick={(p) => setPickedPrice(p)}
+                onPricePick={(p) => {
+                  setPickedPrice(p);
+                  savePick(symbol, p, pickedSide);
+                }}
               />
             </div>
             {pickedPrice != null ? (
@@ -233,8 +249,7 @@ function InstrumentPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setTicket({ target, side: "BUY", limitPrice: pickedPrice });
-                    setPickedPrice(null);
+                    pickAndTrade("BUY", pickedPrice);
                   }}
                   className="rounded-lg bg-bull px-3 py-1.5 text-xs font-bold text-white"
                 >
@@ -243,8 +258,7 @@ function InstrumentPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setTicket({ target, side: "SELL", limitPrice: pickedPrice });
-                    setPickedPrice(null);
+                    pickAndTrade("SELL", pickedPrice);
                   }}
                   className="rounded-lg bg-bear px-3 py-1.5 text-xs font-bold text-white"
                 >
@@ -253,7 +267,10 @@ function InstrumentPage() {
                 <button
                   type="button"
                   aria-label="Clear selected price"
-                  onClick={() => setPickedPrice(null)}
+                  onClick={() => {
+                    clearPick(symbol);
+                    setPickedPrice(null);
+                  }}
                   className="rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground"
                 >
                   ✕
@@ -310,7 +327,9 @@ function InstrumentPage() {
 
           <button
             type="button"
-            onClick={() => setTicket({ target, side: "BUY" })}
+            onClick={() =>
+              setTicket({ target, side: pickedSide, limitPrice: pickedPrice ?? undefined })
+            }
             className="relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-border bg-surface-1 p-4 text-left"
           >
             <div>
@@ -385,14 +404,14 @@ function InstrumentPage() {
         <div className="mx-auto flex max-w-3xl gap-3 px-4 py-3">
           <button
             type="button"
-            onClick={() => setTicket({ target, side: "BUY" })}
+            onClick={() => setTicket({ target, side: "BUY", limitPrice: pickedPrice ?? undefined })}
             className="flex-1 rounded-xl bg-bull py-3 text-sm font-semibold text-white"
           >
             BUY
           </button>
           <button
             type="button"
-            onClick={() => setTicket({ target, side: "SELL" })}
+            onClick={() => setTicket({ target, side: "SELL", limitPrice: pickedPrice ?? undefined })}
             className="flex-1 rounded-xl bg-bear py-3 text-sm font-semibold text-white"
           >
             SELL
