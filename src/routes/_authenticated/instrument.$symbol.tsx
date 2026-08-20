@@ -101,7 +101,13 @@ function InstrumentPage() {
   const [mode, setMode] = useState<"area" | "candles">("area");
   const [snapshotOpen, setSnapshotOpen] = useState(true);
   const [alertOpen, setAlertOpen] = useState(false);
-  const [ticket, setTicket] = useState<{ target: TradeTarget; side: "BUY" | "SELL" } | null>(null);
+  const [ticket, setTicket] = useState<{
+    target: TradeTarget;
+    side: "BUY" | "SELL";
+    limitPrice?: number;
+  } | null>(null);
+  const [pickedPrice, setPickedPrice] = useState<number | null>(null);
+
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
