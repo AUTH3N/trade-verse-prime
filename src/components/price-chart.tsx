@@ -58,6 +58,8 @@ export function PriceChart({
     });
     chartRef.current = chart;
 
+    let main: { coordinateToPrice: (y: number) => number | null };
+
     if (mode === "area") {
       const area = chart.addSeries(AreaSeries, {
         lineColor: hsl(tone),
@@ -70,6 +72,7 @@ export function PriceChart({
       area.setData(
         candles.map((c) => ({ time: c.time as UTCTimestamp, value: c.close })),
       );
+      main = area;
     } else {
       const bull = hsl("--bull");
       const bear = hsl("--bear");
@@ -104,17 +107,27 @@ export function PriceChart({
           color: c.close >= c.open ? hsl("--bull", 0.4) : hsl("--bear", 0.4),
         })),
       );
+      main = series;
     }
+
+    const onClick = (param: { point?: { x: number; y: number } }) => {
+      if (!pickRef.current || !param.point) return;
+      const price = main.coordinateToPrice(param.point.y);
+      if (price != null && Number.isFinite(price)) pickRef.current(+price.toFixed(2));
+    };
+    chart.subscribeClick(onClick);
 
     chart.timeScale().fitContent();
     const ro = new ResizeObserver(() => chart.applyOptions({}));
     ro.observe(el);
     return () => {
       ro.disconnect();
+      chart.unsubscribeClick(onClick);
       chart.remove();
       chartRef.current = null;
     };
   }, [candles, mode, height, bullish]);
+
 
   return <div ref={containerRef} style={{ height }} className="w-full" />;
 }
