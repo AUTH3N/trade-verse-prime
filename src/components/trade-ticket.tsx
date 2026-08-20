@@ -20,19 +20,25 @@ export function TradeTicket({
   target,
   side: initialSide,
   onClose,
+  limitPrice,
 }: {
   target: TradeTarget;
   side: "BUY" | "SELL";
   onClose: () => void;
+  /** When set, the ticket opens as a LIMIT order prefilled with this price. */
+  limitPrice?: number;
 }) {
   const [side, setSide] = useState<"BUY" | "SELL">(initialSide);
   const lotSize = target.lotSize ?? 1;
   const [qty, setQty] = useState<number>(lotSize);
-  const [price, setPrice] = useState<number>(target.price);
-  const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
+  const [price, setPrice] = useState<number>(limitPrice ?? target.price);
+  const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">(
+    limitPrice != null ? "LIMIT" : "MARKET",
+  );
   const [busy, setBusy] = useState(false);
   const place = useServerFn(placeOrder);
   const qc = useQueryClient();
+
 
   const notional = qty * price;
   const isBuy = side === "BUY";
