@@ -18,18 +18,24 @@ export function PriceChart({
   mode = "area",
   height = 260,
   bullish,
+  onPricePick,
 }: {
   candles: Candle[];
   mode?: "area" | "candles";
   height?: number;
   bullish: boolean;
+  /** Fired when the user taps a point on the chart, with the price at that y-coordinate. */
+  onPricePick?: (price: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const pickRef = useRef(onPricePick);
+  pickRef.current = onPricePick;
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el || candles.length === 0) return;
+
 
     const cs = getComputedStyle(document.documentElement);
     const hsl = (name: string, a = 1) => `hsl(${cs.getPropertyValue(name).trim()} / ${a})`;
