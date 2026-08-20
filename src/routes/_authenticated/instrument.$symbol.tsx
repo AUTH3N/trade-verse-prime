@@ -107,12 +107,24 @@ function InstrumentPage() {
     limitPrice?: number;
   } | null>(null);
   const [pickedPrice, setPickedPrice] = useState<number | null>(null);
+  const [pickedSide, setPickedSide] = useState<"BUY" | "SELL">("BUY");
 
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setSaved(localStorage.getItem(`vyro:wl:${symbol}`) === "1");
+    const remembered = loadPick(symbol);
+    setPickedPrice(remembered?.price ?? null);
+    setPickedSide(remembered?.side ?? "BUY");
   }, [symbol]);
+
+  function pickAndTrade(side: "BUY" | "SELL", price: number) {
+    savePick(symbol, price, side);
+    setPickedSide(side);
+    setPickedPrice(price);
+    setTicket({ target, side, limitPrice: price });
+  }
+
 
   // Chart data refreshes on a slower cadence than the ticking header.
   const bucket = Math.floor(now / 15_000);
