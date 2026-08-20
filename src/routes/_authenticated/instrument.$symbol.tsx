@@ -404,7 +404,13 @@ function InstrumentPage() {
         <AlertSheet symbol={symbol} price={quote.price} onClose={() => setAlertOpen(false)} />
       )}
       {ticket && (
-        <TradeTicket target={ticket.target} side={ticket.side} onClose={() => setTicket(null)} />
+        <TradeTicket
+          target={ticket.target}
+          side={ticket.side}
+          limitPrice={ticket.limitPrice}
+          onClose={() => setTicket(null)}
+        />
+
       )}
     </div>
   );
