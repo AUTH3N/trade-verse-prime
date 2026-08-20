@@ -21,19 +21,25 @@ export function TradeTicket({
   side: initialSide,
   onClose,
   limitPrice,
+  initialOrderType,
+  onOrderTypeChange,
 }: {
   target: TradeTarget;
   side: "BUY" | "SELL";
   onClose: () => void;
   /** When set, the ticket opens as a LIMIT order prefilled with this price. */
   limitPrice?: number;
+  /** Overrides the order type the ticket opens with. */
+  initialOrderType?: "MARKET" | "LIMIT";
+  /** Called whenever the user switches MARKET/LIMIT, so callers can persist it. */
+  onOrderTypeChange?: (t: "MARKET" | "LIMIT") => void;
 }) {
   const [side, setSide] = useState<"BUY" | "SELL">(initialSide);
   const lotSize = target.lotSize ?? 1;
   const [qty, setQty] = useState<number>(lotSize);
   const [price, setPrice] = useState<number>(limitPrice ?? target.price);
   const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">(
-    limitPrice != null ? "LIMIT" : "MARKET",
+    initialOrderType ?? (limitPrice != null ? "LIMIT" : "MARKET"),
   );
   const [busy, setBusy] = useState(false);
   const place = useServerFn(placeOrder);
@@ -146,7 +152,10 @@ export function TradeTicket({
           {(["MARKET", "LIMIT"] as const).map((t) => (
             <button
               key={t}
-              onClick={() => setOrderType(t)}
+              onClick={() => {
+                setOrderType(t);
+                onOrderTypeChange?.(t);
+              }}
               className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
                 orderType === t
                   ? "border-primary bg-primary/15 text-primary"
